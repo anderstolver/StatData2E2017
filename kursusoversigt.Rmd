@@ -39,15 +39,15 @@ Tildelingen af lokaler kan også ses via følgende [link](https://skema.ku.dk/tt
 
 Du kan finde en oversigt over undervisningslokalerne via følgende [link](https://intranet.ku.dk/science/dk/bygninger-service/plan-projekt/lokaleadministration/Sider/default.aspx).
 
-* I oversigten nedenfor henviser BMS til kompendiet **Bibby, Martinussen & Sørensen**: Experimental Design in the Agricultural Sciences (-se også [Undervisningsmateriale](#undervisningsmateriale))
+* I oversigten nedenfor henviser BMS til kompendiet **Bibby, Martinussen & Skovgaard**: Experimental Design in the Agricultural Sciences (-se også [Undervisningsmateriale](#undervisningsmateriale))
 
 
 | Kursusuge | Dato | Emner | Pensum | Detaljer
 | ----------- | ------ | ------- | -------- | ----------
-| 1 | [4/9-2017](#dag1_1) | 1-sidet ANOVA, linear regression | BMS: 1, 2.1, 3.1 | Repetition / genopfriskning
-| 1 | [6/9-2017](#dag1_2) | 2-sidet ANOVA, faktorer, faktordiagrammer | BMS: 2.2, 2.3, 3.2 | Variansanalyse med to faktorer
-| 2 | [11/9-2017](#dag2_1) | Flerfaktorforsøg, faktordiagrammer | BMS: 2.3, 3.2| Variansanalyse med mange faktorer
-| 2 | [13/9-2017](#dag2_2) | Modelkontrol | | 
+| 1 | [5/9-2017](#dag1_1) | 1-sidet ANOVA, linear regression | BMS: 1, 2.1, 3.1 | Repetition / genopfriskning
+| 1 | [7/9-2017](#dag1_2) | 2-sidet ANOVA, faktorer, faktordiagrammer | BMS: 2.2, 2.3, 3.2 | Variansanalyse med to faktorer
+| 2 | [12/9-2017](#dag2_1) | Flerfaktorforsøg, faktordiagrammer | BMS: 2.3, 3.2| Variansanalyse med mange faktorer
+| 2 | [14/9-2017](#dag2_2) | Modelkontrol | | 
 | 3 | | Lineære modeller | |
 | 3 | | Kovariansanalyse | |
 | 4 | | Tilfældige effekter| |
@@ -82,7 +82,7 @@ Tilbage til [kursusoversigten](#skema).
 
 Du opfordres til at anskaffe dig en version af lærebogen
 
-* **Bibby, Martinussen & Sørensen**: Experimental Design in the Agricultural Sciences
+* **Bibby, Martinussen & Skovgaard**: Experimental Design in the Agricultural Sciences
 
 Bogen kan købes i bogladen på Frederiksberg Campus. Gamle versioner af noterne fra sidste år kan sagtens bruges.
 
@@ -115,10 +115,85 @@ Tilbage til [kursusoversigten](#skema).
 
 ## Kursusuge 1 
 
-### Tirsdag d. 4/9-2017 {#dag1_1}
+Ensidet variansanalyse og lineær regression (repetition).
 
-### Torsdag d. 6/9-2017 {#dag1_2}
+### Tirsdag d. 5/9-2017 {#dag1_1}
 
-### Tirsdag d. 11/9-2017 {#dag2_1}
+Forelæsninger
 
-### Torsdag d. 13/9-2017 {#dag2_2}
+* slides: [forel170905.pdf](https://github.com/anderstolver/StatData2E2017/blob/master/slides/forel170905.pdf) - [forel170905_short.pdf](https://github.com/anderstolver/StatData2E2017/blob/master/slides/forel170905_short.pdf) (kort version til udskrift)
+* data: [chloro.txt](https://github.com/anderstolver/StatData2E2017/blob/master/data/chloro.txt) - [koagul.txt](https://github.com/anderstolver/StatData2E2017/blob/master/data/koagul.txt) - [linreg.txt](https://github.com/anderstolver/StatData2E2017/blob/master/data/linreg.txt)
+* R-programmer:
+
+Regneøvelser
+
+* opgaveformuleringer: [opg1_2017.pdf](https://github.com/anderstolver/StatData2E2017/blob/master/opgaver/uge1opg.pdf)
+* data:  [potter.txt](https://github.com/anderstolver/StatData2E2017/blob/master/data/potter.txt) - [fosfor.txt](https://github.com/anderstolver/StatData2E2017/blob/master/data/fosfor.txt) - [fosfor-means.txt](https://github.com/anderstolver/StatData2E2017/blob/master/data/fosfor-means.txt) - [fosfor-udbytter.txt](https://github.com/anderstolver/StatData2E2017/blob/master/data/fosfor-udbytter.txt) - [opg1-5.txt](https://github.com/anderstolver/StatData2E2017/blob/master/data/opg1-5.txt)
+* R-programmer / løsninger: 
+
+(Frivillig) afleveringsopgave
+
+Afleveres senest tirsdag d. 12/9-2017 kl. 10:00 til Anders Tolver eller en af instruktorerne
+
+* opgaveformulering: 
+* data: [afl1data.txt](https://github.com/anderstolver/StatData2E2017/blob/master/data/afl1data.txt)
+* R-programmer / løsninger:
+
+### Torsdag d. 7/9-2017 {#dag1_2}
+
+Forelæsninger
+
+* slides: 
+* data: [Example32.txt](https://github.com/anderstolver/StatData2E2017/blob/master/data/Example32.txt)
+* R-programmer:
+
+Regneøvelser
+
+* opgaveformuleringer: [opg1_2_2017.pdf](https://github.com/anderstolver/StatData2E2017/blob/master/opgaver/opg1_2_E2017.pdf)
+* data: [FP270505.txt](https://github.com/anderstolver/StatData2E2017/blob/master/data/FP270505.txt) (opgave 2.1) - [Ex23.txt](https://github.com/anderstolver/StatData2E2017/blob/master/data/Ex23.txt)  (opgave 2.3)
+* R-programmer / løsninger:
+
+Case-arbejde
+
+* opgaveformuleringer:
+* data:
+* R-programmer / løsninger:
+
+
+## Kursusuge 2
+
+Ensidet variansanalyse og lineær regression (repetition).
+
+### Tirsdag d. 12/9-2017 {#dag2_1}
+
+Forelæsninger
+
+* slides: 
+* data: 
+* R-programmer:
+
+Regneøvelser
+
+* opgaveformuleringer:
+* data:
+* R-programmer / løsninger:
+
+### Torsdag d. 14/9-2017 {#dag2_2}
+
+Forelæsninger
+
+* slides: 
+* data: 
+* R-programmer:
+
+Regneøvelser
+
+* opgaveformuleringer:
+* data:
+* R-programmer / løsninger:
+
+Case-arbejde
+
+* opgaveformuleringer:
+* data:
+* R-programmer / løsninger:
