@@ -1,0 +1,124 @@
+---
+title: "StatData2 - E2017 - Kursusoversigt"
+author: "Anders Tolver"
+date: "31 Aug 2017"
+output:
+  html_document:
+    theme: sandstone
+linkcolor: greenish
+urlcolor: greenish
+---
+
+Generelle oplysninger om kurset kan findes på [KU's officielle kursusbeskrivelse](http://kurser.ku.dk/course/NMAB14002U).
+
+Hvis du ønsker at kunne tilgå kursusoversigt direkte (uden først at skulle logge på Absalon), så kan du kopiere følgende link ind i din browser
+
+` https://rawgit.com/anderstolver/StatData2E2017/master/kursusoversigt.html`
+
+# Undervisere
+
+Kursusansvarlig i E2017, blok 1 er [Anders Tolver](mailto:tolver@math.ku.dk).
+
+Instruktorer i E2017, blok 1 er
+
+* Adrian Fabich Balk-Møller
+* Aleksander Søltoft-Jensen
+
+# Skema {#skema}
+
+Hver undervisningsuge består af følgende aktiviteter:
+
+* Tirsdag ca. 8:15-10:00: forelæsninger i øv - A1-09.01 (2-03), Dyrlægevej 88, Frederiksberg
+* Tirsdag 10:00-12:00: regneøvelser i øv - A1-09.01 (2-03), Dyrlægevej 88, Frederiksberg
+* Torsdag ca. 8:15-10:00: forelæsninger i øv - A1-09.01 (2-03), Dyrlægevej 88, Frederiksberg
+* Torsdag 10:00-12:00: regneøvelser i øv - A1-09.01 (2-03), Dyrlægevej 88, Frederiksberg
+* Torsdag 13:00-15:00: delvist selvstændigt arbejde i øv - A1-01.18, Bülowsvej 17, Frederiksberg
+* Torsdag ca. 15:15-16: opsummering m.m i øv - A1-01.18, Bulowsvej 17, Frederiksberg
+
+Tildelingen af lokaler kan også ses via følgende [link](https://skema.ku.dk/tt/tt.asp?SDB=KU1718&language=DK&folder=Reporting&style=textspreadsheet&type=module&idtype=id&id=73028&weeks=1-27&days=1-5&periods=1-68&width=0&height=0&template=SWSCUST2+module+textspreadsheet)
+
+Du kan finde en oversigt over undervisningslokalerne via følgende [link](https://intranet.ku.dk/science/dk/bygninger-service/plan-projekt/lokaleadministration/Sider/default.aspx).
+
+* I oversigten nedenfor henviser BMS til kompendiet **Bibby, Martinussen & Sørensen**: Experimental Design in the Agricultural Sciences (-se også [Undervisningsmateriale](#undervisningsmateriale))
+
+
+| Kursusuge | Dato | Emner | Pensum | Detaljer
+| ----------- | ------ | ------- | -------- | ----------
+| 1 | [4/9-2017](#dag1_1) | 1-sidet ANOVA, linear regression | BMS: 1, 2.1, 3.1 | Repetition / genopfriskning
+| 1 | [6/9-2017](#dag1_2) | 2-sidet ANOVA, faktorer, faktordiagrammer | BMS: 2.2, 2.3, 3.2 | Variansanalyse med to faktorer
+| 2 | [11/9-2017](#dag2_1) | Flerfaktorforsøg, faktordiagrammer | BMS: 2.3, 3.2| Variansanalyse med mange faktorer
+| 2 | [13/9-2017](#dag2_2) | Modelkontrol | | 
+| 3 | | Lineære modeller | |
+| 3 | | Kovariansanalyse | |
+| 4 | | Tilfældige effekter| |
+| 4 | | Tilfældige effekter| |
+| 5 | | Gentagne målinger| |
+| 5 | | Gentagne målinger| |
+| 6 | | Gentagne målinger| |
+| 6 | | Repetition| |
+| 7 | | Forsøgsplanlægning| |
+| 7 | | Forsøgsplanlægning| |
+| 8 | | Repetition| |
+| 8 | | Repetition| |
+
+
+# Om kurset
+
+Kurset udbygger teori for og brug af lineære modeller for faktorforsøg og introducerer modeller med flere forskellige variationskilder (tilfældige effekter) samt data med seriel korrelation (gentagne målinger, longitudinale data) for data med kontinuert variation. Hovedemner er tilfældige effekter (random effects), gentagne målinger (repeated measures), multipel regressionsanalyse, lineære modeller med faktorer, kovariater og tilfældige effekter.
+
+Det statistiske programmeringssprog R anvendes hele vejen gennem kurset og er kraftigt integreret i undervisningen. Sproget R er et internationalt førende statistiksprog hvori mange standardmetoder er forudprogrammeret i R-pakker, og flere kommer til efterhånden som metoderne udvikles. Sproget er gratis og kan hentes her
+
+* [Install R](http://mirrors.dotsrc.org/cran/)
+
+Vi arbejder med R via RStudio, der indeholder en række nyttige værktøjer til at få det fulde udbytte at R, herunder muligheden for let at integrere tekst, R-kode og R-output i samme dokument. RStudio kan hentes her
+
+* [RStudio](https://www.rstudio.com/products/rstudio/download/)
+
+Fra første undervisningsgang skal du medbringe en bærbar computer med R og RStudio installeret. Du bør sørge for at installere (eller opdatere til) de nyeste versioner.
+
+# Undervisningsmateriale {#undervisningsmateriale}
+
+Tilbage til [kursusoversigten](#skema).
+
+Du opfordres til at anskaffe dig en version af lærebogen
+
+* **Bibby, Martinussen & Sørensen**: Experimental Design in the Agricultural Sciences
+
+Bogen kan købes i bogladen på Frederiksberg Campus. Gamle versioner af noterne fra sidste år kan sagtens bruges.
+
+Mange studerende vil i praksis primært benytte opgaver, forelæsningsslides og R-programmer fra selve undervisningen som undervisningsmateriale, så det kan være en fordel at tænke på lærebogen, som et supplement til det der foregår ved selve undervisningen. Detaljeret information om denne del af undervisningsmaterialet findes under beskrivelsen af de enkelte [kursusaktiviteter](#kursusaktiviteter)
+
+## Supplerende materiale
+
+I løbet af kurset vil vi forsøge at opdatere denne del af kursushjemmesiden med nyttige links og materiale, som *kan* være af interesse for en del af jer. 
+
+### R
+
+Download R og R studio
+
+* [Install R](http://mirrors.dotsrc.org/cran/)
+* [RStudio](https://www.rstudio.com/products/rstudio/download/)
+
+### R markdown
+
+R markdown er et nyttigt format til at lave dokumenter der indeholder en kombination af tekst, R-kode, R-output og figurer. I løbet af kurset vil vi forsøge at stimulere jer til at arbejde med R via R markdown, fordi det er et fantastisk værktøj til at arbejde med R på en måde der gør det let at dokumentere og kommunikere dit arbejde med en reproducerbar over overskuelig måde.
+
+For at få fuldt udbytte af R markdown skal du sørge for at opdatere til en ny version af R studio ligesom du skal downloade R pakken **rmarkdown**.
+
+Hvis du gerne vil være god til at bruge R markdown kan du søge mere information her
+
+* R Markdown articles: [`rmarkdown.rstudio.com/articles.html`](http://rmarkdown.rstudio.com/articles.html)
+
+# Hvad skete der på de enkelte undervisningsdage? {#kursusaktiviteter}
+
+Tilbage til [kursusoversigten](#skema).
+
+## Kursusuge 1 
+
+### Tirsdag d. 4/9-2017 {#dag1_1}
+
+### Torsdag d. 6/9-2017 {#dag1_2}
+
+### Tirsdag d. 11/9-2017 {#dag2_1}
+
+### Torsdag d. 13/9-2017 {#dag2_2}
