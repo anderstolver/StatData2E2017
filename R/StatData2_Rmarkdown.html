@@ -16,6 +16,43 @@
 
 <link href="data:image/x-icon;" rel="icon" type="image/x-icon">
 
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
 
 <script type="text/javascript">
 window.FlexDashboardComponents = [];
@@ -2576,9 +2613,6 @@ window.FlexDashboardComponents.push({
 
 <div id="dashboard-container">
 
-<div class="knitr-options" data-fig-width="576" data-fig-height="460">
-
-</div>
 <div id="quick-start" class="section level1">
 <h1>Quick start</h1>
 <p>R markdown er et nyttigt filformat til at lave dynamiske og reproducerbare dokumenter der blander R code, R output og klartekst.</p>
@@ -2591,6 +2625,36 @@ window.FlexDashboardComponents.push({
 <li><a href="http://rmarkdown.rstudio.com">R Markdwon</a></li>
 <li><a href="https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf">R Markdown Cheat Sheet</a></li>
 </ul>
+</div>
+<div id="code-chunks" class="section level1">
+<h1>Code Chunks</h1>
+<div id="section" class="section level2 tabset">
+<h2></h2>
+<p>For at køre R kode i et R markdown dokument, skal koden skrives i såkaldte <em>Code Chunks</em>.</p>
+<p>Vælg <strong>Code -&gt; Insert Chunk</strong> for at indsætte en ny chunk.</p>
+<p>Det er en god ide at lære sig et keyboard shortcut til at indsætte chunks: <strong>Cmd/Ctrl-Alt-I</strong>.</p>
+<p>For overskuelighedens skyld kan det være nyttigt at navngive chunks og at ændre forskellige options der påvirker, hvordan R kode og output bliver indsat, når man <em>knitr</em> sit markdown dokument.</p>
+<p>Hvis du fx ønsker at lave en chunk med navn <em>readdata</em>, men hvor R-koden <em>ikke</em> ses i det knittede dokument, så skal du starte din chunk med syntaxen</p>
+<p><code>```{r readdata, echo = FALSE}</code></p>
+<p>Det vil ofte være nyttig at kunne ændre nogle chunk options en gang for alle, så de virker for alle efterfølgende chunks i R markdown filen.</p>
+<p>Den følgende chunk ændrer det <strong>root directory</strong> der anvendes, når koden fra de forskellige chunks evalueres. Ved undervisningen d. 5/9-2017 oplevede mange af jer problemer med at ændre <em>working directory</em> vha. <code>setwd()</code>, hvilket skabte problemer med indlæsning af data. Nedenstående løser dette problem, hvis du ændrer <strong>root.dir</strong> til navnet på det directory, hvor du har dine datasæt liggende.</p>
+<div class="knitr-options" data-fig-width="576" data-fig-height="460">
+
+</div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">knitr::opts_knit$<span class="kw">set</span>(<span class="dt">root.dir =</span> <span class="st">&quot;/Users/anders/Documents/teaching/SD2/StatData2E2017/data&quot;</span>)</code></pre></div>
+<p>Data kan nu indlæses fra det directory du har specificeret ved brug af <code>read.table</code>.</p>
+<div class="knitr-options" data-fig-width="576" data-fig-height="460">
+
+</div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">data &lt;-<span class="st"> </span><span class="kw">read.table</span>(<span class="dt">file =</span> <span class="st">&quot;koagul.txt&quot;</span>, <span class="dt">header =</span> T)
+<span class="kw">head</span>(data, <span class="dv">5</span>)</code></pre></div>
+<pre><code>  foder tid
+1     A  63
+2     A  67
+3     A  71
+4     A  64
+5     A  65</code></pre>
+</div>
 </div>
 
 </div>
@@ -2620,9 +2684,6 @@ output:
     theme: sandstone
 ---
 
-```{r}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
 # Quick start
 
@@ -2640,6 +2701,38 @@ Et par nyttige links kan være
 
 - [R Markdwon](http://rmarkdown.rstudio.com)
 - [R  Markdown Cheat Sheet](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf)
+
+# Code Chunks
+
+## {.tabset}
+
+For at køre R kode i et R markdown dokument, skal koden skrives i såkaldte *Code Chunks*. 
+
+Vælg **Code -&gt; Insert Chunk** for at indsætte en ny chunk.  
+
+Det er en god ide at lære sig et keyboard shortcut til at indsætte chunks: **Cmd/Ctrl-Alt-I**.
+
+For overskuelighedens skyld kan det være nyttigt at navngive chunks og at ændre forskellige options der påvirker, hvordan R kode og output bliver indsat, når man *knitr* sit markdown dokument.
+
+Hvis du fx ønsker at lave en chunk med navn *readdata*, men hvor R-koden *ikke* ses i det knittede dokument, så skal du starte din chunk med syntaxen
+
+` ```{r readdata, echo = FALSE} `
+
+Det vil ofte være nyttig at kunne ændre nogle chunk options en gang for alle, så de virker for alle efterfølgende chunks i R markdown filen. 
+
+Den følgende chunk ændrer det **root directory** der anvendes, når koden fra de forskellige chunks evalueres. Ved undervisningen d. 5/9-2017 oplevede mange af jer problemer med at ændre *working directory* vha. `setwd()`, hvilket skabte problemer med indlæsning af data. Nedenstående løser dette problem, hvis du ændrer **root.dir** til navnet på det directory, hvor du har dine datasæt liggende.
+
+
+```{r setup, echo = TRUE}
+knitr::opts_knit$set(root.dir = &quot;/Users/anders/Documents/teaching/SD2/StatData2E2017/data&quot;)
+```
+
+Data kan nu indlæses fra det directory du har specificeret ved brug af `read.table`.
+
+```{r echo = TRUE}
+data &lt;- read.table(file = &quot;koagul.txt&quot;, header = T)
+head(data, 5)
+```
 </code></pre>
 </div>
 <script type="text/javascript">
