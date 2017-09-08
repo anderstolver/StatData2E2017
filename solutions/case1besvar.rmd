@@ -1,0 +1,302 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+Besvarelse af Case 1 fra Statistisk Dataanalyse 2 
+========================================================
+
+Dette er et forsøg på at lave en mere punktopstillet besvarelse af case 1.
+
+For at undgå for mange gentagelser foreslår jeg, at man læser nedenstående samtidig med,
+at man har adgang til pdf-filen \texttt{case1sol.pdf} og evt forelæsningsslides fra kursusuge 1.
+
+Delopgave 1
+========================================================
+
+Indlæsning af data til case.
+
+1a
+--
+
+```{r}
+kart<-read.table("../data/fosfor.txt",header=T)
+dim(kart) ### find antal rækker og søjler i datasættet
+head(kart,6) ### udskriv de første 6 linjer i datasættet
+```
+
+Datasættet indeholder 27 observationer og 5 variable med navne
+
+```{r}
+names(kart) ### udskriv variabelnavne i datasættet
+```
+
+1b
+--
+
+Vi starter med at lave forskellige tabeller over variablene i datasættet. Da variablen 'udbytte' skal bruges som responsvariabel ser vi ikke på denne.
+
+```{r}
+table(kart$fosfor)
+table(kart$p81)
+table(kart$p82)
+table(kart$blok)
+```
+
+Det ses at alle faktorerne er balancerede (-f.eks. er der 3 målinger for hvert af de 9 niveuaer af fosfor).
+
+Nedenfor undersøges, om R opfatter variablen fosfor som en faktor
+
+```{r}
+kart$fosfor
+is.factor(kart$fosfor)
+```
+
+Vi kan lave variablen fosfor om til en faktor og lægge faktorversionen af fosfor ned i datasættet kart ved at skrive
+
+```{r}
+kart$fosfor <- factor(kart$fosfor)
+```
+
+Nedenfor vises, at R nu opfatter variablen fosfor som en faktor
+
+
+```{r}
+kart$fosfor
+is.factor(kart$fosfor)
+```
+
+Kommandoen 'levels' kan bruges til at få R til at udskrive niveauerne for en faktor
+
+```{r}
+levels(kart$fosfor)
+```
+
+Tilsvarende laves blok om til en faktor
+
+```{r}
+kart$blok<-factor(kart$blok)
+is.factor(kart$blok)
+levels(kart$blok)
+```
+
+
+1c
+---
+
+I stedet for at løse dette delspørgsmål følges (-som foreslået i opgaver) opskriften fra delspørgsmål 1d)-1h)
+
+1d
+---
+
+Formuleringen af opgaven er lidt kryptisk:
+
+I første omgang er det meningen, at man skal undersøge, hvordan udbyttet afhænger af faktorerne blok og fosfor. Det naturlige udgangspunkt ville være at starte med den fulde tosidede variansanalysemodel (-også kaldet modellen med vekselvirkning).
+
+```{r}
+model1<-lm(udbytte~fosfor:blok,kart)
+summary(model1)
+```
+
+Output ser mærkeligt ud: R kan ikke estimere variansen inden for grupperne.
+
+Dette skyldes, at produktfaktorer fosfor x blok har 27 niveauer (=9 gange 3), og at der i datasættet kun er een måling per gruppe. Dette kan f.eks. ses af følgende tabel.
+
+```{r}
+table(kart$fosfor,kart$blok)
+```
+
+VIGTIGT: når man ikke har gentagelser for produktfaktoren, så kan man ikke tage udgangspunkt i denne statistiske model. Datasættet er for lille, og analysen bliver nødt til at tage udgangspunkt i en model med færre parametre. Derfor tager vi i stedet udgangspunkt i den additive model for tosidet variansanalyse.
+
+```{r}
+model2<-lm(udbytte~fosfor+blok,kart)
+```
+
+Opskrevet 'på papir' ser modellen ud som på slide 12 fra forelæsningen d. 7/9-2017.
+
+1e
+---
+
+Nedenfor testes hypotesen om, at der er en sammenhæng mellem fosforbehandling og udbytte.
+
+```{r}
+model3<-lm(udbytte~blok,kart)
+anova(model3,model2)
+```
+
+Da p-værdien er meget lille konkluderes, at den reducerede model3 (-hvor fosfor er fjernet) beskriver variationen i udbytte meget dårligere end den additive model2, hvor fosfor er med. Konklusionen er, at fosfor bidrager væsentligt til at forklare variationen i udbytte. Mao er der en stærk sammenhæng mellem fosfor behandling og udbytte.
+
+Problemet er, at ovenstående test kun undersøger om udbyttet for alle 9 fosforbehandlinger kan antages at være helt ens eller om der er nogle forskelle. Vi får ikke svar på, hvilke fosforbehandlinger, der giver forskelligt udbytte, og specielt får vi ikke svar på, om det er førsteårs- eller andenårs fosfortilførslen, der er associeret med udbyttet.
+
+1f+1g
+-----
+
+Det er essentielt at indse, at fosfor faktoren er det samme som produktfaktorer af p81 og p82. Det betyder, at den model vi ovenfor fittede som 'model2' lige så godt kan skrives som
+
+```{r}
+model2alt<-lm(udbytte~blok+factor(p81):factor(p82),kart)
+```
+
+Man kan f.eks. lave en tabel af sammenhørende værdier af fosfor og p81 x p82 men henblik på at se, hvordan niveauerne for de to faktorer (fosfor hhv p81xp82) svarer til hinanden
+
+```{r}
+table(kart$fosfor,factor(kart$p81):factor(kart$p82))
+```
+
+Heraf se f.eks. at fosfor=3 svarer præcis til p81=0,p82=40.
+
+Den nye formulering af udgangsmodellen (dvs. model2alt) kan nu forsøges reduceret ved at fjerne p82 (dvs. andenårstilførslen fra modellen)
+
+```{r}
+model4<-lm(udbytte~blok+factor(p81),kart)
+anova(model4,model2alt)
+```
+
+Den meget lave p-værdi viser, at p82 ikke kan fjernes fra modellen, dvs. at niveauet af p82 hænger sammen med udbyttet.
+
+1h
+----
+
+Med udgangspunkt i den additive model (dvs. enten 'model2' eller 'model2alt') kunne man også undersøge, om man kan teste blok-effekten væk
+
+```{r}
+model5<-lm(udbytte~fosfor,kart)
+anova(model5,model2)
+```
+
+Med en p-værdi på 0.0073 tyder det også må, at blok bidrager signifikant til beskrivelsen af variationen i udbyttet.
+
+Supplement
+-------------
+
+Man kan også tage udgangspunkt i en den additive model med effekt af blok og fosfor og udnytte at fosfor (opfattet som faktor på 9 niveauer) er identisk med vekselvirkningen af p81 og p82. Dernæst kan man lave et formelt test for, om effekten af p81 og p82 kan opfattes som en additiv effekt (i modeller hvor man stadig medtager en potentiel effekt af blok). Dette test er foretaget nedenfor.
+
+```{r}
+model2alt<-lm(udbytte~blok+factor(p81):factor(p82),kart)
+model2add<-lm(udbytte~blok+factor(p81)+factor(p82),kart)
+anova(model2add, model2alt)
+```
+
+Konklusion:
+
+Der ser ikke ud til at være en væsentlig vekselvirkning mellem p81 og p82.
+
+
+Delopgave 2
+========================================================
+
+Indlæsning af data til case.
+
+2a-b
+----
+
+```{r}
+kartmeans<-read.table("../data/fosfor-means.txt",header=T)
+dim(kartmeans) ### find antal rækker og søjler i datasættet
+kartmeans ### udskriv  datasættet
+```
+
+Datasættet indeholder 9 observationer og 3 variable med navne
+
+```{r}
+names(kartmeans) ### udskriv variabelnavne i datasættet
+```
+
+Tabeller over variablene i datasættet
+
+```{r}
+table(kartmeans$p81)
+table(kartmeans$p82)
+table(kartmeans$p81,kartmeans$p82)
+```
+
+Det virker oplagt at optegne data som i et interaction-plot. Man kan overveje, om p81 eller p82 skal ud af første aksen
+
+```{r}
+interaction.plot(kartmeans$p81,kartmeans$p82,kartmeans$yield.mean)
+interaction.plot(kartmeans$p82,kartmeans$p81,kartmeans$yield.mean)
+```
+
+Når man får lidt erfaring kan man lave sine egne plots
+
+```{r}
+plot(kartmeans$p81,kartmeans$yield.mean
+     ,cex=2,col=as.numeric(factor(kartmeans$p82))
+     ,ylab="Gennemsnitsudbytte",xlab="Fosfortilfoersel i 1981")
+lines(c(0,30,60),kartmeans$yield.mean[c(1,4,7)],col="black",lwd=2)
+lines(c(0,30,60),kartmeans$yield.mean[c(2,5,8)],col="red",lwd=2)
+lines(c(0,30,60),kartmeans$yield.mean[c(3,6,9)],col="green",lwd=2)
+legend(x=40,y=360,lwd=2,col=c("green","red","black"),legend=c(0,30,60),title="Fosfortilfoersel i 1982"
+       ,bty="n")
+```
+
+2c+d+e
+-------
+
+Additiv variansanalysemodel fittes i R og estimaterne udskrives
+
+```{r}
+mod1<-lm(yield.mean~factor(p81)+factor(p82),kartmeans)
+summary(mod1)
+```
+
+Fortolkning af estimaterne:
+
+R vælger gruppen p81=0,p82=0 som referencegruppe. Ud for (Intercept) aflæses at det estimerede udbytte for denne gruppe er 339.66.
+
+Desuden angives kontrasterne for p81 og p82 dvs. hvor meget udbyttet ændrer sig i forhold til referencebehandlingen (p81=0,p82=0), hvis man ændrer niveauerne af enten p81 eller p82.
+
+p81=30 øger således udbyttet med 20.67
+p81=60 øger udbyttet med 40.67
+p82=20 øger udbyttet med 20.57
+p82=40 øger udbyttet med 45.77
+
+Det ses at øgningen af udbyttet næsten øges med dobbelt så meget når p82=40 end når p82=20. Dette tyder på en lineær sammenhænge mellem udbytte og tilførslen p82.
+
+Et tilsvarende argument antyder, at udbyttet vokser næsten lineært med værdien af p81.
+
+2f
+----
+
+Det er måske lidt teknisk, hvad man skal gøre her. 
+
+Det simpleste er at dele datasættet 'kartmeans' op i 3 deldatasæt og så fitte en lineær regressionsmodel for udbyttet som funktion af p82 for hver deldatasæt.
+
+```{r}
+data0<-subset(kartmeans,p81==0)
+data30<-subset(kartmeans,p81==30)
+data60<-subset(kartmeans,p81==60)
+modlinje0<-lm(yield.mean~p82,data0)
+modlinje0 ### giver skæring og hældning for linjen fittet til data med p81=0
+modlinje30<-lm(yield.mean~p82,data30)
+modlinje30 ### giver skæring og hældning for linjen fittet til data med p81=30
+modlinje60<-lm(yield.mean~p82,data60)
+modlinje60 ### giver skæring og hældning for linjen fittet til data med p81=60
+```
+
+Nedenfor vises, hvordan man kan lave en figur hvor de rå datapunkt og de tilpassede linjer er blevet indtegnet.
+
+```{r}
+plot(kartmeans$p82,kartmeans$yield.mean
+     ,cex=2,col=as.numeric(factor(kartmeans$p81))
+     ,ylab="Gennemsnitsudbytte",xlab="Fosfortilfoersel i 1982")
+abline(modlinje0,lwd=2,col="black")
+abline(modlinje30,lwd=2,col="red")
+abline(modlinje60,lwd=2,col="green")
+```
+
+2g-h
+-----
+
+Den foreslåede model kan fittes i R ved at lade både p81 og p82 indgå (-som numeriske variable dvs ikke som faktorer).
+
+```{r}
+modbegge<-lm(yield.mean~p81+p82,kartmeans)
+summary(modbegge)
+```
+
+Fortolkningen af parameterestimatet for p81 er, at hver gang man øger p81 med 1 enhed, så vil yield.mean i gennemsnit ændre sig med 0.678. Specielt vil en ændring på 30 modsvares af en ændring på 20.34, hvilken svare meget godt til, hvad vi så i opgave 2e.
+
+Tilsvarende øges yield.mean med 1.144 hver gang p82 øges ved en enhed (jf estimatet ud for p82 ovenfor).
+
+Man kunne derfor vælge at kvantificere andenårsvekselvirkningen i forhold til førsteårsvirkningen ved at tage forholdet 1.144/0.678=1.689.
