@@ -1,0 +1,228 @@
+---
+title: "SD2 - uge 1, tirsdag"
+author: "Anne Petersen"
+output: pdf_document
+---
+
+##1.2
+Loader data og ser på det:
+```{r}
+setwd("C:/Users/Anne/Dropbox/Arbejde/STATforLIFE2/uge1")
+potter <- read.table("potter.txt", header=T)
+potter
+names(potter)
+dim(potter)
+potter$Nitrogen
+
+#Attacher data:
+attach(potter)
+#og nu kan vi bare skrive variabelnavnene uden $:
+Nitrogen
+```
+
+Bruger forskellige kommandoer til at få et overblik over variablen `Nitrogen`:
+```{r}
+mean(Nitrogen) #middelværdi
+var(Nitrogen) #varians
+median(Nitrogen) #median
+sd(Nitrogen) #spredning
+summary(Nitrogen) #kvartiler, mindste og største observation
+```
+
+Vi laver et scatterplot med indeks (observationsnummer) på x-aksen:
+```{r,fig.width=8, fig.height=4}
+plot(Nitrogen)
+```
+
+Det er ret meningsløst - vi har ikke nogen grund til at tro at observationernes rækkefølge skulle være interessant. Vi prøver at lave et histogram i stedet:
+```{r,fig.width=8, fig.height=4}
+hist(Nitrogen)
+```
+
+Nu kan vi se fordelingen af variablen. Vi kan også lave et boxplot for at få et mere præcist indtryk af skævheder i fordelingen, dens bredde m.m.:
+```{r,fig.width=8, fig.height=4}
+boxplot(Nitrogen)
+```
+
+
+Laver  `Nitrogen2` som indeholder elementerne 1, 6, 11, 16, 21 og 26 fra Nitrogen:
+```{r}
+Nitrogen2 <- c(Nitrogen[1], Nitrogen[6], Nitrogen[11], Nitrogen[16], 
+               Nitrogen[21], Nitrogen[26])
+#Alternativ (og smartere) metode:
+Nitrogen2 <- Nitrogen[c(1,6,11,16,21,26)]
+Nitrogen2
+```
+
+Gemmer elementer fra `Nitrogen` som er større end 25 i en ny vektor:
+```{r}
+Nitrogen3 <- Nitrogen[Nitrogen > 25]
+Nitrogen3
+```
+
+Opstiller ensidet variansanalysemodel med `Treat` som faktor og `Nitrogen` som afhængig variabel (ingen referencegruppe):
+```{r}
+model <- lm(Nitrogen ~ Treat-1)
+```
+
+Ser hvilke værdier af `Nitrogen` hver observation har ifølge modellen: 
+```{r}
+predict(model)
+```
+
+Ser modellens estimater for `Nitrogen` for hver gruppe (dvs. modellens parameterestimater):
+```{r}
+coef(model)
+```
+
+Ser residualerne for hver observation, dvs. hvor meget observationen afviger fra det, modellen prædikterer:
+```{r}
+resid(model)
+```
+
+Ser 95%-konfidensintervaller for hver af modellens parameterestimater:
+```{r}
+confint(model)
+```
+
+Laver et residualplot for modellen:
+```{r,fig.width=8, fig.height=4}
+plot(predict(model), resid(model))
+```
+
+Laver en tom model, dvs. model hvor faktoren `Treat` ingen effekt har:
+```{r}
+model2 <- lm(Nitrogen ~1)
+```
+
+Tester om `model2` er lige så god som `model`, dvs. om der er en effekt af `Treat`:
+```{r}
+anova(model2, model)
+```
+Vi ser at $p < 0.05$, altså forkastes hypotesen om ingen effekt af `Treat` - dvs. der er en signifikant effekt af `Treat`
+
+##Opgave 1.3
+Indlæser data:
+```{r}
+beh <- rep(c(1,2,3,4,5,6,7,8,9),each=3)
+udb <- c(330,320,355,346,350,369,409,363,414,368,340,366,371,
+         373,403,409,410,402,360,396,406,382,407,425,398,415,433)
+```
+
+Plotter udbytte mod behandling:
+```{r,fig.width=8, fig.height=4}
+plot(beh, udb)
+```
+
+Det er ikke specielt meningsfuld. Vi har jo ikke nogen information, som gør det rimeligt at antage, at behandlingerne meningsfuldt kan forstås som tal - de kunne lige så godt hedde "A", "B", "C" osv. ud fra det vi ved.
+
+Vi laver et boxplot for variablen `udb`:
+```{r,fig.width=8, fig.height=4}
+boxplot(udb)
+```
+
+Dette fortæller os noget om fordelingen af udbytte. Men det siger intet om sammenhængen mellem udbytte og behandling.
+
+
+Vi laver nu en faktorversion af behandling og plotter udbytte mod denne nye behandlingsvariabel:
+```{r,fig.width=8, fig.height=4}
+behfac <- factor(beh)
+plot(behfac, udb)
+```
+
+Og vi ser at R nu laver ni boxplots i stedet for et scatterplot - et for hver behandlingstype. Det gør det en del lettere at sige noget om forskellen på de forskellige behandlinger.
+
+
+Vi fitter en etsidet variansanalysemodel (ingen referencekategori):
+```{r}
+fosformodel <- lm(udb ~behfac-1)
+```
+
+og vi kigger på parameterestimaterne:
+```{r}
+summary(fosformodel)
+```
+
+og bemærker at det er de samme tal, der kommer ud som prædikterede værdier, blot gentaget alt efter behandlingsgruppen:
+```{r}
+predict(fosformodel)
+```
+
+Vi undersøger om der en effekt af behandling:
+```{r}
+anova(lm(udb ~1), fosformodel)
+```
+og vi ser at $p<0.05$, dvs. der er en signifikant effekt af behandling.
+
+Vi indlæser nu det udvidede fosfor-datasæt:
+```{r}
+fosfor <- read.table("fosfor.txt", header=T)
+fosfor
+```
+Bemærk at variablen `fosfor` svarer til `beh` fra ovenstående og at variablen `p82` er grovere end `fosfor`: Hvis vi kender `fosfor` for en observation, kender vi også dens værdi af `p82`, men det gælder ikke den anden vej rundt. 
+
+Vi fitter ny model hvor kun `p82` antages at have en effekt:
+```{r}
+model82 <- lm(udbytte ~ factor(p82)-1, data=fosfor)
+```
+
+Vi tester en model med `fosfor` som forklarende variabel (svarende til `fosformodel` ovenfor) mod en model, som bruger `p82` som forklarende variabel:
+```{r}
+anova(lm(udbytte ~factor(fosfor)-1, data=fosfor), model82)
+```
+Vi finder $p<0.05$, og altså er der en signifikant forskel på modellerne. Da `p82` er en forsimpling af `fosfor`, er denne form for test meningsfuld og vi konkluderer at udbyttet ikke kun afhænger af fosfortilførslen i 1982, men at vi også skal bruge variablen `fosfor` for at få den bedst mulige model.
+
+##1.9
+Vi tæller antal observationer med hver behandling:
+```{r}
+table(fosfor$fosfor)
+```
+
+Vi tæller antal observationer for her kombination af p81 og p82:
+```{r}
+table(fosfor$p81, fosfor$p82)
+```
+
+Vi udtrækker den del af datasættet som havde p82=0:
+```{r}
+fos0 <- subset(fosfor, p82==0)
+```
+
+Vi beregner middelværdi og spredning for udbyttet for de observationer, som har p82=0 og tegner et boxplot over deres udbytter:
+```{r,fig.width=8, fig.height=4}
+mean(fos0$udbytte) #middelværdi
+sd(fos0$udbytte) #spredning
+boxplot(fos0$udbytte)
+```
+
+Vi tegner boxplots over udbytte alt efter værdien af p82:
+```{r,fig.width=8, fig.height=4}
+boxplot(udbytte~p82, data=fosfor)
+```
+
+Vi udskriver de første 10 linier af datasættet:
+```{r}
+head(fosfor, 10)
+```
+
+Vi udskriver rækkenumrene for de observationer, som har p82=0:
+```{r}
+rownames(fos0)
+
+#Alternativ metode
+which(fosfor$p82==0)
+```
+
+Vi udskriver rækkenumrene for de observationer, som har p81=p82=0:
+```{r}
+rownames(subset(fosfor, p82==0 & p81==0))
+
+#Alternativ metode:
+which(fosfor$p81==0 & fosfor$p82==0)
+```
+
+Vi laver en ny dataframe uden observation nummer 8:
+```{r}  
+fosno8 <- fosfor[-8,]
+fosno8
+``` 

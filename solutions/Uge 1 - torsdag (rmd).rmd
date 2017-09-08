@@ -1,0 +1,114 @@
+---
+title: "SD2 - uge 1, torsdag"
+author: "Anne Petersen"
+output: pdf_document
+---
+
+##Opgave 2.1 fra dokument på Absalon
+Vi starter med at indlæse data og attache det, så vi har lettere adgang til variablene:
+```{r}
+setwd("C:/Users/Anne/Dropbox/Arbejde/STATforLIFE2/uge1")
+kost <- read.table("FP270505.txt", header=T)
+attach(kost)
+kost
+```
+
+Vi har to kategoriske variable, `SEX` og `DIET`, og vi vil gerne have, at R forstår, at de begge er faktorer. Da  `SEX` har niveauer angivet ved bogstaver (F/M), sker dette automatisk:
+```{r}
+is.factor(SEX)
+```
+men fordi `DIET` er angivet med tal, må vi selv sørge for at gemme den som en faktorvariabel:
+```{r}
+is.factor(DIET)
+DIET <- factor(DIET)
+is.factor(DIET)
+```
+
+Nu kigger vi på produktfaktoren `SEX:DIET`, dvs. faktoren som fremkommer ved at betragte alle kombinationer af de to faktorer `SEX` og `DIET`:
+```{r}
+is.factor(SEX:DIET)
+SEX:DIET
+```
+R vælger (heldigvis) at fortolke et produkt af to faktorer som en ny faktor - og det var lige det, vi gerne ville have.
+
+Vi fitter nu en tosidet variansanalysemodel med produktfaktoren som forklarende variabel. Bemærk at vi også inddrager de marginale effekter af hver af de forklarende variable (også kendt som hovedeffekterne) jf. det hierarkiske princip (som I kender fra SD1):
+```{r}
+model <- lm(energioms ~ SEX:DIET + SEX + DIET)
+#Alternativ måde at skrive samme model på:
+model <- lm(energioms ~ SEX*DIET)
+```
+
+Og vi kigger på modelresultaterne:
+```{r}
+summary(model)
+```
+
+Vi ser at referencegruppen er SEX=F, DIET=1 (fordi det er de niveauer der "mangler" i `summary()`-outputtet). Vi kan aflæse at parameterestimatet for mænd, som har fået diæt 3 er 
+$$9712.3 + 3080.3 - 544.0 - 106.0 = 12142.6$$
+og det kunne vi også få R til at bestemme vha. `predict()`-funktionen:
+```{r}
+predict(model, new=data.frame(SEX="M", DIET="3"))
+```
+Vi aflæser parameterestimatet for kvinder, som har fået diæt 2:
+$$9712.3 + 222.3 = 9934.6$$
+eller vha. R:
+```{r}
+predict(model, new=data.frame(SEX="F", DIET="2"))
+```
+
+Vi aflæser estimatet for spredningen, $s$, (som står under "residual standard error") til at være
+$$s = 868.5$$
+og vi kan selvfølgelig også trække tallet direkte ud af `summary()`-outputtet, hvis vi hellere vil det:
+```{r}
+summary(model)$sigma
+```
+
+
+Vi betragter nu et interaktionsplot (vekselvirkningsplot):
+```{r, fig.width=8, fig.height=4}
+interaction.plot(DIET, SEX, energioms)
+```
+
+Vi ser at mænd generelt har højere energiomsætning end kvinder. Det ser desuden ud til at de forskellige kosttypers påvirkning af energiomsætningen er forskellig for de to køn, fx. er mænds energiomsætning lavest på kost 2 mens kvinders her er højest. Vi ser desuden, at der er større udsving i energiomsætningen for mænd på tværs af kosttyperne end for kvinder. Alt i alt tyder det altså på, at der godt kunne være en vekselvirkningseffekt. Men det må vi hellere undersøge mere stringent vha. tests.
+
+
+Vi fitter derfor en additiv model med effekter af `SEX` og `DIET` og kigger på den:
+```{r}
+add_model <- lm(energioms ~ DIET + SEX)
+summary(add_model)
+```
+Vi ser at referencegruppen stadig er kvinde og kost nr. 1. Og vi kan aflæse, at parameterestimatet for mænd der har fået kost 3 er
+$$10041.6 - 597.0 + 2421.8 = 11866.4$$
+og for kvinder, som har fået kost 2 får vi
+$$10041.6 - 712.5 = 9329.1$$
+eller vi kan gør det vha. R:
+```{r}
+predict(add_model, new=data.frame(SEX=c("M","F"),
+                                  DIET=c("3", "2")))
+```
+
+
+Vi fitter nu ensidede variansanalysemodeller med hhv. `SEX` og `DIET` som forklarende variabel:
+```{r}
+modelS <- lm(energioms ~ SEX)
+modelD <- lm(energioms ~ DIET)
+```
+
+Vi kan nu teste modellerne op mod hinanden. Vi starter med den mest komplicerede model, dvs. modellen med vekselvirkningseffekten, og tester den op mod modellen, som kun har to additive effekter:
+```{r}
+anova(add_model, model)
+```
+Bemærk, at vi tester hypotesen om ingen effekt af vekselvirkningen. Vi finder $p = 0.1542 > 0.05$ og accepterer altså hypotesen. Der er dermed ingen signifikant effekt af vekselvirkningen, og vi kan arbejde videre med den forsimplede model, `add_model`. Men lad os se, om vi kan gøre det endnu simplere - måske er det ikke nødvendigt at inddrage begge de forklarende variable? Vi tester det:
+```{r}
+anova(modelS, add_model)
+anova(modelD, add_model)
+```
+Vi ser, at der ikke er nogen signifant effekt af `DIET` (vi får $p=0.3948$, når vi fjerner denne effekt). Der er derimod en signfikant effekt af  `SEX` i den additive model ($p = 8.291 \cdot 10^{-5}$). Vi går altså videre med `modelS`. Lad os lige tjekke, om der stadig er en signifikant effekt af `SEX` i denne model:
+```{r}
+anova(modelS)
+#Alternativ måde at få samme resultat:
+anova(lm(energioms ~ 1), modelS)
+```
+og vi ser, at der er en signifikant effekt af `SEX` i denne model, så vi kan ikke reducere modellen yderligere. Altså er vores slutmodel `modelS`, dvs. modellen
+$$Y_i = \alpha_{\text{SEX}(i)} +  e_i$$
+med notation som i opgavebeskrivelsen. 
