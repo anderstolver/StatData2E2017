@@ -1,0 +1,26 @@
+Obs    gartner    handler    kunde    flor    middel    art      tid
+
+  1       0          0         0        1       A       GAR      10.1
+  2       0          0         0        2       A       GAR      8.9
+  3       0          0         0        3       A       GAR      11.4
+  4       1          0         0        1       A       GAR      10.9
+  5       1          0         0        2       A       GAR      6.9
+  6       1          0         0        3       A       GAR      11.2
+  7       0          1         0        1       A       GAR      9.6
+  8       0          1         0        2       A       GAR      9.9
+  9       0          1         0        3       A       GAR      11.3
+ 10       0          0         1        1       A       GAR      11.8
+ 11       0          0         1        2       A       GAR      9.7
+ 12       0          0         1        3       A       GAR      13.1
+ 13       1          1         0        1       A       GAR      9.8
+ 14       1          1         0        2       A       GAR      10.9
+ 15       1          1         0        3       A       GAR      12.3
+ 16       1          0         1        1       A       GAR      10.9
+ 17       1          0         1        2       A       GAR      7.7
+ 18       1          0         1        3       A       GAR      12.7
+ 19       0          1         1        1       A       GAR      12.8
+ 20       0          1         1        2       A       GAR      13.5
+ 21       0          1         1        3       A       GAR      14.9
+ 22       1          1         1        1       A       GAR      13.3
+ 23       1          1         1        2       A       GAR      13.4
+ 24       1          1         1        3       A       GAR      15.2
