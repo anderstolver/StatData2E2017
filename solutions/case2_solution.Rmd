@@ -1,0 +1,243 @@
+---
+title: 'Case 2: reproducerbare statistiske analyser - løsningsforslag'
+author: "Anders Tolver"
+date: "29 Feb 2016"
+output: html_document
+---
+
+På baggrund af besvarelserne fra studerende har jeg strikket en vejledende besvarelse til case 2 sammen. Formålet er IKKE at vise jer, hvordan I skulle have løst opgaven, for jeg har helt oplagt snydt ved at bruge væsentlig mere tid på besvarelsen, end I selv havde til rådighed under case-arbejdet. Tanken er mere, at nedenståede repræsenterer et produkt der samler noget af de bedste fra det I selv har bidraget med, så vi alle kommer styrkede ud af øvelsen.
+
+Bemærk, at der både vises modelreduktion (spørgsmål 5) med udgangspunkt i en 3-sidet eller en 2-sidet variansanalysemodel. Det var ikke en del af opgaven, at man nødvendigvis skulle vælge den mest avancerede løsning, men hvis man ikke har grund til andet, så vil det nok (med vores nuværende briller) være mest oplagt at vælge den mest fleksible model for 3-sidet ANOVA.
+
+Jeg har desuden suppleret med lidt ekstra guf omkring figurer og andre ting, som kunne gøre arbejdet med at lave reproducerbare statistiske analyser lettere.
+
+Jeg har nedenfor forsøgt at skrive, hvilke besvarelser jeg har hugget dele af løsningen fra. Der kan dog sagtens være mange studerende, som har lavet stort set samme løsning, så lad være med at lægge for meget i, om jeg har sakset noget fra netop jeres besvarelse.
+
+## 1. Forsøgets formål
+
+At undersøge, om der er fysiologisk belæg for at hævde, at nogle mennesker ikke er egnede til at løbe om morgenen. De måles omgangstider og noteres om det før eller efter kl. 9, om det er høj eller lav intensitet samt hvor udmattet personen kan forventes at være iht. hvor mange omgange der tidligere løbet. [fra Helle Keinicke]
+
+## 2. Data 
+
+Først indlæses data
+
+```{r}
+data <-read.table(file="../data/case2full.txt", header= T)
+attach(data)
+data
+# tjekker om de relevante variabler er faktorer
+is.factor(omgang)
+is.factor(INTENS)
+is.factor(MORGEN)
+# hvis de relevante ikke er angivet som faktorer så;
+data$INTENS<-factor(INTENS)
+data$MORGEN<-factor(MORGEN)
+```
+
+Krydstabeller for kombinationer af faktorer
+
+```{r}
+table(omgang, INTENS)
+table(INTENS, MORGEN)
+table(omgang, MORGEN)
+```
+
+Disse resultater viser bl.a. at det ikke er et balanceret forsøg.
+
+
+## 3. Figurer 
+
+Histogram som viser fordelingen af alle tidsmålinger
+
+```{r}
+hist(data$tid)
+```
+
+```{r}
+plot(data$tid~MORGEN) 
+```
+
+Umiddelbart ser der ikke ud til at være en forskel i tiden, når man løber morgen=1 vs. efter 9 (morgen =0)
+
+```{r}
+boxplot(data$tid ~ INTENS) 
+```
+
+Tiden er højere for INTENSitet 0
+
+```{r}
+boxplot(data$tid~omgang) 
+```
+
+Omgangstiden ser umiddelbart du til at falde med antallet af omgange der er løbet.
+
+## 4. Statistisk model
+
+Der kan tages udgangspunkt i en model med trefaktor-vekselvirkning. Her kan man f.x. først kontrollere, at der er gentagelser (dvs flere målinger) for en del af kombinationerne af de tre faktorer.
+
+Teknisk info: fordi den ene af faktorerne (her: omgang) har 3 niveauer, så er det ikke et problem, at der er en af cellerne i nedenstående tabel, hvor der ikke er nogle observationer (her: omgang = 4-5, MORGEN = 0, INTENS = 0). Hvis man er i tvivl, kan man blot fitte modellen i R og sikre sig, at der faktisk kommer en estimat for spredningen (residual standard error).
+
+
+```{r}
+with(data, table(MORGEN, INTENS, omgang))
+mod1 <- lm(tid~MORGEN*INTENS*omgang, data=data) ### den fulde model
+```
+
+Man kunne også have valgt at lave nogle figurer til kontrol af modellen (fra Lea Nymand)
+
+```{r}
+plot(predict(mod1),rstandard(mod1))
+qqnorm(rstandard(mod1)) 
+abline(0,1)
+```
+
+Figurerne giver ikke anledning til at betvivle modelantagelserne bag en 3-sidet ANOVA model ed vekselvirkning (her: mod1 i R-koden ovenfor)
+
+## 5. Test af hypotese (modelreduktion)
+
+### Baseret på 2-sidet anova
+
+Først ser vi på en tosidet variansanalyse af omgang og intensistet, da det umiddelbart var dem som så interessante ud jævnfør opg. 3. Der fittes en model med vekselvirkning:
+```{r}
+modelA<-lm(tid ~ omgang*INTENS, data = data)
+```
+
+For at teste om modelA kan reduceres, fittes en model uden vekselvirkning kun indeholdende hovedeffekterne
+```{r}
+modelB<-lm(tid ~ omgang + INTENS, data = data)
+```
+
+Det undersøges om vi kan reducere vores model til modelB ved ANOVA:
+```{r}
+anova(modelB,modelA)
+```
+Da p er over 0.05 kan vi ikke afvise 0-hypotesen at der ikke ses forskel mellem de to modeller, hvorfor vi kan reducere vekselvirkningen væk og gå videre med modelB.
+
+Nu laves en ny model uden hovedeffekten omgang, og der testes om der er signifikant effekt af denne faktor.
+```{r}
+modelC<-lm(tid ~ INTENS, data = data)
+anova(modelC,modelB)
+```
+Da p er under 0.05 kan vi afvise 0-hypotesen at der ikke ses forskel mellem de to modeller, hvorfor vi IKKE kan reducere omgang faktoren væk.
+
+Vi tester nu hovedeffekten INTENS.
+
+```{r}
+modelD<-lm(tid ~ omgang, data = data)
+anova(modelD,modelB)
+```
+Da p er under 0.05 kan vi afvise 0-hypotesen at der ikke ses forskel mellem de to modeller, hvorfor vi IKKE kan reducere INTENS faktor væk. 
+
+Den endelige model bliver dermed model B - en additiv tofaktor model.
+
+### Baseret på 3-sidet anova
+
+Test for 3-faktorvekselvirkning (modelreduktion ok)
+```{r}
+mod2 <- lm(tid~MORGEN*INTENS+MORGEN*omgang+INTENS*omgang, data=data) 
+anova(mod1, mod2)
+```
+
+Test (i to trin!) som viser, at parvise vekselvirkninger med omgang kan fjernes fra modellen
+```{r}
+mod3 <- lm(tid~MORGEN*INTENS+MORGEN*omgang, data=data)
+anova(mod2,mod3)
+mod4 <- lm(tid~MORGEN*INTENS+omgang, data=data)
+anova(mod3, mod4)
+```
+
+Test for om hovedeffekt af omgang kan fjernes (forkastes)
+
+```{r}
+mod5 <- lm(tid~MORGEN*INTENS, data=data)
+anova(mod4, mod5)
+```
+
+Test som viser, at vekselvirkning ml. morgen og intens kan fjernes fra modellen
+
+```{r}
+mod6 <- lm(tid~MORGEN+INTENS+omgang, data=data)
+anova(mod4, mod6)
+```
+
+Et par tests som viser, at vi kan se bort fra hovedeffekten af morgen
+```{r}
+mod7 <- lm(tid~MORGEN+omgang, data=data)
+anova(mod6, mod7)
+mod8 <- lm(tid~INTENS+omgang, data=data)
+anova(mod6, mod8) 
+```
+
+
+## 6. Konklusion 
+
+Vi har fundet at data bedst kan beskrives med modelB.
+
+Parameter estimaterne findes
+```{r}
+summary(modelB)
+confint(modelB)
+```
+Vi ser hermed at omgangstiden ved lav intensitet og 0-1 omgange er 427 sek. 
+På 2-3 omgang mindskes omgangstiden med 19 sek og på omgang 4-5 er tiden 26 sek. lavere.
+Det ser ydermere at løbes der med højintensitet fremfor lav intensitet reduceres tiden med 29 sek. Således er tiden på 4-5 omgang for en løber med høj intensitet 427-26-29 = 372 sek.
+
+# Nogle smarte ting 
+
+Når man arbejder i R-markdown er det muligt at skrive kommentarer, hvor man automatisk indsætter resultatet af en beregning i R i teksten på det relevante sted. Mere information om dette kan findes ved at google *inline R expression*. Nedenfor gives et eksempel, hvor parameterestimaterne fra slutmodellen indsættes i teksten sammen med relevante kommentarer. For at forstå hele eksemplet skal man læse R-markdown file (- tricket fremgår ikke i html-filen).
+
+Slutmodellen er en additiv model for 2-sidet ANOVA med effekt af faktorerne *omgang* og *INTENS*.
+
+Her udtrækkes parameterestimaterne fra *modelB* og gemmes i vektoren *coefsfinal* efter afrunding til 1 decimal. 
+
+```{r}
+coefsfinal <- round(coef(modelB), digits = 1)
+```
+
+Estimaterne og deres fortolkning bliver
+
+- Reference-gruppe (Intercept) svarer til omgang 0-1 og INTENS = 0 (lav): omgangstiden estimeres her til `r coefsfinal[1]` sekunder.
+
+- Hvis der er allerede er løbet 2 eller 3 omgange vil den forventede omgangstid ændres med `r coefsfinal[2]` sekunder. 
+
+- Hvis der er allerede er løbet 4 eller 5 omgange vil den forventede omgangstid ændres med `r coefsfinal[3]` sekunder. 
+
+- Hvis der løbes med høj intensitet vil den forventede omgangstid ændres med `r coefsfinal[4]` sekunder. 
+
+Det smarte ved ovenstående er, at estimaterne automatisk bliver opdateret inde i selve teksten, hvis der f.x. blev opdaget (og efterfølgende rettet) en fejl i datasættet. 
+
+
+Det er også muligt lave en figur, hvor en del af layoutet afhænger af resultarne af noget af det, der regnes ud fra modellen. I det følgende eksempel gøres følgende:
+
+- på baggrund af *modelB* udregnes de prædikterede estimater for de 2 x 3 kombinationer af faktorerne *INTENS* og *Omgang* 
+
+- der udregnes også 95 % -konfidensintervaller for estimaterne
+
+- estimaterne optegnes på en figur ligesom for et interaction plot
+
+Teknisk info: *predict*-funktionen kan bruges til at udregne forventede værdier for specifikke værdier af variable i en model, der er estimeret med *lm*-funktionen i R. I praksis laves først et datasæt (her kaldet *newdata*) som indeholder de værdier for hvilke vi ønsker at beregne de forventede (eller såkaldte prædikterede) værdier.
+
+```{r}
+newdata <- data.frame( omgang = rep(c("0-1","2-3","4-5"), 2)
+, INTENS = gl(2, 3, labels = c(0,1)))
+newdata
+predictfinal <- predict(modelB, newdata = newdata, interval = "confidence")
+predictfinal
+```
+
+Neden for optegnes en figur. Det kræver træning at lære at lave pæne figurer i R, men i princippet er alt muligt. Prøv eventuelt at køre nedenstående R-kode, hvor du skiftevis fjerner, tilføjer og ændrer småting i R-koden, så du får en fornemmelse for, hvilken effekt de enkelte dele af R-koden har på layoutet af figuren.
+
+```{r}
+plot(predictfinal[1:3,1], pch = 1, ylim = c(350,450), type = 'b'
+     , xlab = "Antal omgange", ylab = "Omgangstid (sek)"
+     , axes = F)
+points(predictfinal[4:6,1], pch = 16, type ='b')
+axis(side = 1, at = c(1,2,3), labels = c("0-1", "2-3", "4-5"))
+axis(side = 2, at = seq(300, 500, by = 10))
+legend(2, 450, legend = c("INTENS = 0", "INTENS = 1"), pch = c(1,16), bty  = "n")
+for(i in 1:3){
+  lines(c(i,i), predictfinal[i,2:3], lty = 2)
+  lines(c(i,i), predictfinal[3+i,2:3], lty = 1)
+}
+title("Visualisering af estimater fra slutmodellen")
+```

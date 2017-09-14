@@ -1,0 +1,125 @@
+---
+title: "SD2 - uge 2, tirsdag"
+author: "Anne Petersen"
+output: pdf_document
+---
+
+##Opgave 2.2 fra dokument på Absalon
+Vi indlæser data og attacher det for lettere adgang til variablene:
+```{r}
+setwd("C:/Users/Anne/Dropbox/Arbejde/STATforLIFE2/uge2")
+terbuthyl <- read.table("ex34.txt", header=T)
+attach(terbuthyl)
+head(terbuthyl, 10) #de første 10 observationer
+```
+
+Vi ser hvor mange observationer der er i hver kombination af `TEMP` og `LUC` i datasættet:
+```{r}
+table(TEMP,LUC)
+```
+Vi ser, at der er lige mange (4) observationer i hver kombination. Hvis vi betragter eksperimentet som et tofaktorforsøg med faktorerne `TEMP` og `LUC`, er det altså balanceret. Lad os se, om det også er balanceret, hvis vi inkluderer den tredje faktor, `ADP`:
+```{r}
+table(TEMP, LUC, ADP)
+```
+Det er det - der er nemlig netop 2 observationer i hver unik kombination af de tre faktorer. Dermed er forsøget balanceret.
+
+
+Vi omdanner nu alle faktorvariablene til faktorer i R:
+```{r}
+TEMP <- factor(TEMP)
+LUC <- factor(LUC)
+ADP <- factor(ADP)
+```
+
+Og vi fitter model A fra opgavebeskrivelsen, dvs. en trefaktormodel med andenordens vekselvirkninger (`TEMP:LUC:ADP`), førsteordens vekselvirkninger (`TEMP:LUC`, `TEMP:ADP`, `ADP:LUC`) og hovedeffekter/marginale effekter (`TEMP`, `LUC`, `ADP`): 
+```{r}
+modelA <- lm(mineral ~ TEMP*LUC*ADP)
+```
+
+Vi fitter desuden endnu en model, som kun inkluderer andenordens vekselvirkningen fra ovenfor:
+```{r}
+modelB <- lm(mineral ~ TEMP:LUC:ADP)
+```
+
+Vi sammenligner nu de to modellers `summary()`-output:
+```{r}
+summary(modelA)
+summary(modelB)
+```
+For `modelA` ser vi, at estimaterne viser dels effekten af `TEMP`, `LUC` og `ADP` særskilt, dels effekten af kombinationerne af disse faktorer. Bemærk at referencegruppen er `TEMP=10`, `LUC=0`, `ADP=0`. 
+For `modelB` ser vi, at estimaterne viser effekten af hver kombination af `TEMP`, `LUC` og `ADP`. Bemærk at referencegruppen nu er `TEMP=20`, `LUC=1`, `ADP=1` (derfor er der bare angivet `NA`'er for denne kombination). Bemærk at de to modeller indeholder den samme information, bare skrevet forskelligt. De har fx. samme estimat for residualvariansen ($\sigma$), nemlig 0.2206, og de dikterer de samme estimater for hver af de $2 \cdot 2 \cdot 2 = 8$ forskellige kombinationer af de tre faktorer (her vist ved at de prædikterer den samme værdi for hver af de 16 observationer i datasættet):
+```{r}
+round(predict(modelA), 10) == round(predict(modelB), 10)
+```
+Bemærk at vi benytter afrundingskommandoen `round()` til sammenligningen, fordi R ellers vil konkludere at visse prædiktioner er forskellige pga. afrundingsfejl. Ved at skrive `round(predict(modelA), 10)` ser vi på prædiktionerne fra `modelA` med 10 decimaler - og det at der står `TRUE` ovenfor betyder, at de to modeller prædikterer ens op til (mindst) de første 10 decimaler. 
+
+
+Vi bliver nu bedt om at gennemføre modelreduktion. Jf. det hierarkiske princip, vil vi først teste, om vi kan fjerne vekselvirkningseffekten som har den største orden, dvs. effekten `TEMP:LUC:ADP`. For at gøre modelreduktionen fuldstændig transparant, genfitter vi modellerne fra ovenfor, så man eksplicit kan læse klart alle effekter, som indgår. Bemærk at `modelA1` nedenfor og `modelA` er fuldstændigt identiske.
+```{r}
+modelA1 <- lm(mineral ~ TEMP + LUC + ADP + TEMP:LUC + TEMP:ADP +
+                LUC:ADP + TEMP:LUC:ADP)
+modelC <- lm(mineral ~ TEMP + LUC + ADP + TEMP:LUC + TEMP:ADP +
+                LUC:ADP)
+anova(modelC, modelA1)
+```
+Vi finder en teststørrelse på $F = 0.36$ ved $(1, 8)$ frihedsgrader, svarende til $p = 0.5646$. Vi konkluderer altså, at der ikke er signifikant effekt af andenordensvekselvirkningen `TEMP:LUC:ADP` og går videre med den reducerede `modelC`. I denne model kan vi forsøge at fjerne de tre førsteordens vekselvirkningsled, altså `TEMP:LUC`, `TEMP:ADP` og `TEMP:ADP`. Men hvilken rækkefølge skal vi forsøge at fjerne dem i? Én strategi er at prøve at se hvad der sker, hvis vi fjerner én af dem fra modellen. Hvis nogen af disse reduktioner så fører til $p > 0.05$, kan vi vælge at gå videre med den model, som giver den største $p$-værdi. Dette kan gøres smart vha. funktionen `drop1()`:
+```{r}
+drop1(modelC, test="F")
+```
+Vi ser, at den største $p$-værdi opnås ved at fjerne `TEMP:LUC`-leddet, så det gør vi. Her fås $F= 0.4494$ og $p=0.52$. Vi ser derefter, om modellen nu kan reduceres yderligere:
+```{r}
+modelD <- lm(mineral ~ TEMP + LUC + ADP + TEMP:ADP + LUC:ADP)
+drop1(modelD, test="F")
+```
+og vi ser, at vi bør fjerne `LUC:ADP`-leddet ($F =1.0083$, $p=0.34$). Vi fitter denne nye model som `modelE` og ser, om vi også kan fjerne det sidste vekselvirkningsled:
+```{r}
+modelE <- lm(mineral ~ TEMP + LUC + ADP + TEMP:ADP)
+modelF <- lm(mineral ~ TEMP + LUC + ADP)
+anova(modelF, modelE)
+```
+og vi finder $F=14.697$ og $p = 0.003$ for testen af ingen effekt af `TEMP:ADP`. Altså er der signifikant effekt af dette vekselvirkningsled. Bemærk dog, at `LUC` ikke længere indgår i et vekselvirkningsled. Altså kan vi godt teste om denne effekt kan fjernes:
+```{r}
+modelG <- lm(mineral ~ TEMP + ADP + TEMP:ADP)
+anova(modelG, modelE)
+```
+og det kan den - vi finder nemlig $F=3.9818$ svarende til $p=0.07$. Altså reducrer vi til `modelG`. Vi tjekker om vekselvirkningsleddet `TEMP:ADP` nu er blevet insignifikant:
+```{r}
+modelH <- lm(mineral ~ TEMP + ADP)
+anova(modelH, modelG)
+```
+og det er det ikke. Det betyder, at `modelG` ikke kan reduceres yderligere og det er dermed vores slutmodel. 
+
+Vi finder nu parameterestimaterne for hver af de fire grupper, som bestemt af vores slutmodel, `modelG`:
+```{r}
+summary(modelG)
+```
+Bemærk at referencegruppen er `TEMP=10`, `ADP=0`. Altså får vi følgende parameterestimater:
+$$\text{TEMP=10, ADP=0:} 2.4000$$
+$$\text{TEMP=10, ADP=1:} 2.4000 + 2.8275 = 5.2275 $$
+$$\text{TEMP=20, ADP=0:} 2.4000 + 1.1175 = 3.5175 $$
+$$\text{TEMP=20, ADP=1:} 2.4000 + 1.1175 + 2.8275 - 0.7925 = 5.5525$$
+
+Estimatet for spredningen i slutmodellen ses at være
+$$s = 0.231$$
+Taller er aflæst som "residual standard error" i `summary()`-outputtet. Vi gemmer det også lige under navnet `sigma`:
+```{r}
+sigma <- summary(modelG)$sigma
+```
+
+
+Vi finder nu LSD-værdien svarende for `TEMP*ADP`, dvs. den mindste forskel der skal være mellem to forskellige grupper af `TEMP` og `ADP`-kombinationer, før den er signifikant. 
+```{r}
+(LSD_TEMP.ADP <- qt(0.975,12)*sigma*sqrt(2/4))
+```
+Bemærk, at vi bruger 12 frihedsgrader fordi der er 16 observationer, fratrukket $2 \cdot 2$ kategorier. Vi ganger med $\sqrt{2/4}$ fordi vi sammenligner to tal som stammer fra en faktor (`TEMP:ADP`), 
+som er balanceret med 4 observationer i hver kategori. Bemærk desuden, at $s \cdot \sqrt{1/2}$ er det samme som 
+$$\text{SD(et gruppegennemsnit - et andet gruppegennemsnit)}$$
+og da forsøget er balanceret, er denne størrelse det samme, uanset hvilke to grupper, der sammenlignes. Specielt kan vi finde tallet ved at kigge på i `summary()`-outputtets standard error for fx. `TEMP20`, som vi gemmer:
+```{r}
+(SD_diff <- summary(modelG)$coefficients[2,2])
+sigma*sqrt(2/4)
+```
+og altså kan LSD-størrelsen her også udregnes ved
+```{r}
+SD_diff*qt(0.975,12)
+```    
