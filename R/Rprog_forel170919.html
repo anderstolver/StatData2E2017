@@ -2620,6 +2620,10 @@ window.FlexDashboardComponents.push({
 </div>
 <div id="read-in-data" class="section level1">
 <h1>Read in data</h1>
+<div id="section" class="section level2 tabset">
+<h2></h2>
+<div id="read-data" class="section level3">
+<h3>Read data</h3>
 <p>Below we</p>
 <ul>
 <li>read in data</li>
@@ -2645,9 +2649,33 @@ data$hourfac &lt;-<span class="st"> </span><span class="kw">factor</span>(data$h
 5 barley   72   3.48 0.5415792      72
 6 barley    8   4.46 0.6493349       8</code></pre>
 </div>
+<div id="tables" class="section level3">
+<h3>Tables</h3>
+<div class="knitr-options" data-fig-width="576" data-fig-height="460">
+
+</div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">table</span>(data$feed)</code></pre></div>
+<pre><code>
+barley   fish   mais   meat    soy 
+    10     10     10     10     10 </code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">table</span>(data$hourfac)</code></pre></div>
+<pre><code>
+ 8 16 24 32 72 
+10 10 10 10 10 </code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">table</span>(data$feed, data$hourfac)</code></pre></div>
+<pre><code>        
+         8 16 24 32 72
+  barley 2  2  2  2  2
+  fish   2  2  2  2  2
+  mais   2  2  2  2  2
+  meat   2  2  2  2  2
+  soy    2  2  2  2  2</code></pre>
+</div>
+</div>
+</div>
 <div id="way-analysis-of-variance" class="section level1">
 <h1>2-way analysis of variance</h1>
-<div id="section" class="section level2 tabset">
+<div id="section-1" class="section level2 tabset">
 <h2></h2>
 <div id="interaction" class="section level3">
 <h3>Interaction</h3>
@@ -2738,7 +2766,7 @@ F-statistic:  1325 on 8 and 41 DF,  p-value: &lt; 2.2e-16</code></pre>
 </div>
 <div id="plot-data" class="section level1">
 <h1>Plot data</h1>
-<div id="section-1" class="section level2 tabset">
+<div id="section-2" class="section level2 tabset">
 <h2></h2>
 <div id="standard-graphics---code" class="section level3">
 <h3>Standard graphics - code</h3>
@@ -2791,7 +2819,7 @@ F-statistic:  1325 on 8 and 41 DF,  p-value: &lt; 2.2e-16</code></pre>
 </div>
 <div id="analysis-of-covariance" class="section level1">
 <h1>Analysis of covariance</h1>
-<div id="section-2" class="section level2 tabset">
+<div id="section-3" class="section level2 tabset">
 <h2></h2>
 <div id="hour-as-covariate" class="section level3">
 <h3>hour as covariate</h3>
@@ -2917,9 +2945,9 @@ Model 2: logserine ~ feed + hourfac
 <p>The model (<strong>model3</strong>) expresses that there is a linear relationship between <strong>log(serine)</strong> and <strong>hour</strong>. The slope parameter is the same for all levels of factor <strong>feed</strong> but the intercept parameters differ.</p>
 <p>Make sure that the understand the parametrisation used in the R output</p>
 <ul>
-<li>What is the interpretation of the parameter <em>(Intercept)</em>?</li>
-<li>What is the interpretation of the parameter <em>feedmeat</em>?</li>
-<li>What is the interpretation of the parameter <em>hour</em>?</li>
+<li>What is the interpretation of the parameter <em>(Intercept)</em>? (The intercept parameter for <strong>feed = barley</strong>)</li>
+<li>What is the interpretation of the parameter <em>feedmeat</em>? (The difference between intercepts for <strong>fish</strong> and <strong>barley</strong>)</li>
+<li>What is the interpretation of the parameter <em>hour</em>? (The slope/increase of <strong>logserine</strong> whenever <strong>hour</strong> increases by 1 unit/hour )</li>
 </ul>
 <div class="knitr-options" data-fig-width="576" data-fig-height="460">
 
@@ -2972,6 +3000,11 @@ feedmais    1.1608295 1.1815894
 feedmeat    0.9729722 0.9903725
 feedsoy     1.2465312 1.2688237
 hour        0.9958112 0.9960617</code></pre>
+<p>Backtransformed estimates should be interpreted as relative changes</p>
+<ul>
+<li><p>increasing <strong>hour</strong> by one unit leads to a decrease by a factor 0.9959 (= 0.41 %) of <strong>serine</strong></p></li>
+<li><p>the relative difference between <strong>feed=fish</strong> and <strong>feed=barley</strong> (used as reference/Intercept by R) is 0.9358 implying that serine content are 100 x (1 - 0.9358) = 6.42 % lower in <strong>fish</strong> compared to <strong>barley</strong></p></li>
+</ul>
 </div>
 <div id="parameter-estiamtes-3" class="section level3">
 <h3>Parameter estiamtes (3)</h3>
@@ -3077,6 +3110,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Read in data
 
+## {.tabset}
+
+### Read data
+
 Below we
 
 - read in data
@@ -3090,6 +3127,14 @@ data$hourfac &lt;- factor(data$hour)
 levels(data$feed)
 dim(data)
 head(data)
+```
+
+### Tables
+
+```{r}
+table(data$feed)
+table(data$hourfac)
+table(data$feed, data$hourfac)
 ```
 
 # 2-way analysis of variance
@@ -3238,9 +3283,9 @@ The model (**model3**) expresses that there is a linear relationship between **l
 
 Make sure that the understand the parametrisation used in the R output
 
-- What is the interpretation of the parameter *(Intercept)*?
-- What is the interpretation of the parameter *feedmeat*?
-- What is the interpretation of the parameter *hour*?
+- What is the interpretation of the parameter *(Intercept)*? (The intercept parameter for **feed = barley**)
+- What is the interpretation of the parameter *feedmeat*? (The difference between intercepts for **fish** and **barley**)
+- What is the interpretation of the parameter *hour*? (The slope/increase of **logserine** whenever **hour** increases by 1 unit/hour )
 
 ```{r}
 summary(model3)
@@ -3253,6 +3298,12 @@ confint(model3)
 10^(coef(model3))
 10^(confint(model3))
 ```
+
+Backtransformed estimates should be interpreted as relative changes
+
+- increasing **hour** by one unit leads to a decrease by a factor 0.9959 (= 0.41 %) of **serine**
+
+- the relative difference between **feed=fish** and **feed=barley** (used as reference/Intercept by R) is 0.9358 implying that serine content are 100 x (1 - 0.9358) = 6.42 % lower in **fish** compared to **barley**
 
 ### Parameter estiamtes (3)
 
