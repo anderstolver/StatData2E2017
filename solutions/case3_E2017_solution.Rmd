@@ -1,0 +1,255 @@
+---
+title: 'StatData 2 - Case 3: vejledende besvarelse'
+author: "Anders Tolver"
+date: "21 Sep 2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+case3 <- read.table("../data/caseuge3.txt", header = T)
+```
+
+Ugens case handler om brug af en baseline-måling, altsa en måling på hver forsøgsenhed af samme type som responsen blot taget før behandlingen af forsøgsenheden. Opgaven skal ved hjælp af et eksempel illustrere fordelen ved at benytte den metode, der anbefales i kompendiet (BMS).
+
+## Beskrivelse af data
+
+For at undersøge effekten af 7 forskellige behandlinger (hver behandling var et bestemt måltid) deltog 10 personer 7 gange hver, så hver person fik prøvet alle 7 måltider. Forsøget var inddelt i 7 perioder, og i hver periode prøvede hver person et af måltiderne, men rækkefølgen af måltiderne var randomiseret for hver person. Efter at personen havde spist måltidet, blev han/hun bedt om at markere sin fornemmelse af sult på en skala fra 0 til 100. Dette skete et antal gange med fastlagte mellemrum, og i datasættet som vi ser på her angiver variablen `appetite` gennemsnitsscoren for den pågældende person ved den pågældende behandling. En tilsvarende registrering af personens sult-fornemmelse blev foretaget lige inden måltidet;
+denne måling er kaldt `baseline` i datasættet. En enkelt person deltog ikke i en enkelt af perioderne, så datasttet indeholder 69 forsøgsenheder i alt (altså 10 personer gange 7 måltider med et enkelt bortfald).
+
+Link til datasættet `caseuge3.txt` kan findes via kursusoversigten under ugeplanen for uge 3.
+
+## Undersøgelse af datasættet
+
+a. Gem filen `caseuge3.txt` med data, opret et R markdown dokument som gemmes i samme mappe som data, og indsæt en *code chunk* i dit datasæt, der indlæser data fra filen `caseuge3.txt`. Gem datasættet i R under navnet `case3`. Find ud af hvilke variable datasættet indeholder.
+
+```{r}
+case3 <- read.table("../data/caseuge3.txt", header = T)
+head(case3)
+```
+
+**Svar:** Datasættet indholder tre variable (**period, treat, person**) der bør indgå som faktorer i de statistiske analyser og en numerisk variabel der angiver målingen (**baseline**) af sult-fornemmelsen før måltidet. Endelig bør `appetite` benyttes som responsvariabel.
+
+b. Kør følgende to R-kommandoer og diskuter, hvad det fortæller dig om forsøgsplanen. Er forsøget balanceret i de faktorer der indgår i forsøgsdesignet?
+
+```{r eval = F}
+table(case3$treat)
+table(case3$person)
+table(case3$treat, case3$period)
+```
+
+**Svar:** Forsøget er ikke balanceret mht. faktoren `treat`, hvilket skyldes at person nummer 6 kun er registreret i datasættet med 6 målinger.
+
+## Statistiske modeller
+
+c) Responsvariablen i datasættet hedder `appetite`. Opstil (på papir) en statistisk model hvori variablene `period`, `person` og `treat` alle indgår. Hvilke af disse tre variable bør indgå i modellen som faktorer, og hvilke niveauer har hver af faktorerne? (Undlad både i dette og alle følgende sprøgsmål at inkludere vekselvirkninger i modellen).
+
+**Svar:** Modellen kan opskrives som
+
+\[
+{\tt appetite}_i = \alpha({\tt period}_i) + \beta({\tt person}_i) + \gamma({\tt treat}_i) + e_i
+\]
+
+d) Estimer parametrene i din model i R, og test hypotesen om at der ikke er effekt af behandlingerne. Noter (på papir) F-teststørrelsen og P-værdien for testet samt estimatet for residualspredningen (s).
+
+**Svar:** 
+
+```{r}
+model1 <- lm(appetite ~ factor(period) + factor(person) + factor(treat), data = case3)
+summary(model1)
+```
+
+Residualspredningen estimeres til 6.328. 
+
+```{r}
+model2 <- lm(appetite ~ factor(period) + factor(person), data = case3)
+anova(model2, model1)
+```
+
+Test for effekt af **treat**: F = 2.3827 hvilken svarer til en P-værdi på P = 0.04314. F-teststørrelsen er F-fordelt med $(6, 47)$-frihedsgrader.
+
+**Slut på svar!** 
+
+Det er nærliggende at forestille sig at personerne måske ikke føler sig lige sultne når de ankommer (før måltidet), og at det også vil påvirke deres appetit efter måltidet. Baselinemålingen giver information om sult-fornemmelsen før måltidet, men udfordringen ligger i, hvordan vi bedst bruger denne information ved den statistiske analyse. En ofte benyttet metode er at analysere måltidets effekt på ændringen i sult-fornemmelsen fra før til efter måltidet. Man vil med andre ord trække baseline målingen fra scoren for sult-fornemmelse der måles efter måltidet. Ofte vil man sige, at vi benytter ændringen i sult-fornemmelsen som responsvariable ved den statistiske analyse.
+
+e) Opskriv (på papir) modellen svarende til c., nu blot med ændringen i sult-fornemmelse fra før til efter måltidet som responsvariabel.  Estimer modellen i R og test igen hypotesen om at der ikke er effekt af behandlingerne, og noter igen F-teststørrelse, P-værdi og residualspredning. Det kan være nyttigt at lave en ny variable ved brug af følgende R-kode
+
+```{r}
+case3$change <- case3$appetite - case3$baseline
+```
+
+**Svar:**  Modellen kan opskrives som
+
+\[
+{\tt appetite-baseline}_i = \alpha({\tt period}_i) + \beta({\tt person}_i) + \gamma({\tt treat}_i) + e_i
+\]
+
+Estimation af ny model i R
+```{r}
+nymodel1 <- lm(change ~ factor(period) + factor(person) + factor(treat), data = case3)
+summary(nymodel1)
+```
+
+Residualspredningen estimeres til 12.85. 
+
+```{r}
+nymodel2 <- lm(change ~ factor(period) + factor(person), data = case3)
+anova(nymodel2, nymodel1)
+```
+
+Test for effekt af **treat**: F = 1.4523 hvilken svarer til en P-værdi på P = 0.2153. F-teststørrelsen er F-fordelt med $(6, 47)$-frihedsgrader.
+
+f) Prøv at drage en (foreløbig) konklusion ved at sammenligne resultaterne af testene fra spørgsmål d. og
+e.?
+
+**Svar:** Når vi benytter `appetite` som responsvariabel, så virker forskellene mellem det forskellige behandlinger (**treat**) svagt signfikante i forhold til den uforklarede variation i modellen. Når vi istedet benytter ændringe `appetite - baseline` som responsevariabel, så øges størrelsen af den uforklarede variation (=residual standard error), og vi er ikke længere i stand til at se en signfikant effekt af behandlingen.
+
+**Slut på svar!**
+
+Som sidste mulighed lader vi nu variablen `baseline` indgå i modellen som kovariat. Vi vender i den forbindelse tilbage til at bruge `appetite` som responsvariabel (i modsætning til i delspørgsmål e., hvor vi benyttede ændringen i forhold til baseline).
+
+g) Opskriv (på papir) modellen fra spørgsmål c., nu blot med den forskel at `baseline` indgar som kovariat. Estimer modellen i R og test igen hypotesen om at der ikke er effekt af behandlingerne. Husk at notere F-teststørrelse, P-værdi og residualspredning.
+
+**Svar:** Modellen kan opskrives som
+
+\[
+{\tt appetite}_i = \alpha({\tt period}_i) + \beta({\tt person}_i) + \gamma({\tt treat}_i) + \delta \cdot {\tt baseline}_i + e_i
+\]
+
+
+```{r}
+mod1 <- lm(appetite ~ factor(period) + factor(person) + factor(treat) + baseline, data = case3)
+summary(mod1)
+```
+
+Residualspredningen estimeres til 6.206. 
+
+```{r}
+mod2 <- lm(appetite ~ factor(period) + factor(person) + baseline, data = case3)
+anova(mod2, mod1)
+```
+
+Test for effekt af **treat**: F = 2.4461 hvilken svarer til en P-værdi på P = 0.03892. F-teststørrelsen er F-fordelt med $(6, 46)$-frihedsgrader.
+
+h) Sammenlign resultaterne fra g. med dem fra d. og f. Hvilken af de to forrige minder resultaterne mest om? Fokuser f.x. på sammenligning af residualspredningen eller overordnede konklusioner vedrørende behandlingens effekt på sult-fornemmelsen.
+
+**Svar:**  Resultaterne fra delopgave g), hvor `baseline` inddrages som en kovariate ligner mest resultaterne fra analysen i d) både mht. størrelsen af residualspredningen og konklusioner vedr. effekten af behandlingen på sult-fornemmelsen.
+
+i) Estimer koeffcienten (=hældningen) hørende til kovariaten (`baseline`) i modellen fra g. Opskriv de tre modeller fra c., e. og g. (på papir!). Hvilke værdier skulle koefficienten fra modellen i g. antage for, at modellen (dvs. ligningen for den statistiske model) svarer til modellerne fra hhv. c. og e.?
+
+**Svar:** Hvis man kigger på estimaterne fra `mod1` ses, at koefficienten på `baseline` estimeres til 0.11932. Rent fortolkningsmæssigt betyder dette, at hvis sult-fornemmelsen ved baseline ligger f.x. 10 enheder over, hvad man ville forvendte for det pågældende niveau af `person`, `period` og `treat`, så skal man regne med at 11.92 % af denne forøgelse  (=0.1192 x 10 ) også kan ses ved målingen af sult-fornemmelsen efter måltidet.
+
+Hvis man betragter modellen/ligningen fra g)
+
+\[
+{\tt appetite}_i = \alpha({\tt period}_i) + \beta({\tt person}_i) + \gamma({\tt treat}_i) + \delta \cdot {\tt baseline}_i + e_i
+\]
+
+så ses, at
+
+* $\delta = 0$ svarer til modellen/ligningen fra delspørgsmål c)
+
+* $\delta = 1$ svarer til modellen/ligningen fra delspørgsmål e) (-flyt `baseline`-leddet over på venstre side af lighedstegnet)
+
+Modellen fra delopgave g) er derfor mest generel, da den indeholder de to andre modeller som specialtilfælde. 
+
+Konfidensintervallet for hældningen/koefficienten bliver
+
+```{r}
+confint(mod1)["baseline", ]
+```
+
+Man kan således ikke afvise, at $\delta = 0$ ... dvs. at der ikke er strengt nødvendigt overhovedet at justere for sult-fornemmelsen ved `baseline`.
+
+# Estimater og modelkontrol
+
+Hvis der er mere tid, kan du tage fat på at gøre analysen af data helt færdig, for det er den ikke med ovenstående, idet vi mangler modelkontrol samt estimater og konfidensintervaller for interessante effekter (her: behandlingerne).
+
+j) Tag udgangspunkt i modellen fra delspørgsmål g. Lav et residualplot og et QQ-plot for modellen og kommenter. 
+
+k) Overvej, hvordan man kan kontrollere antagelserne bag modellen, der blandt andet siger at der er en retlinet sammenhæng mellem `baseline` og `appetite`. Søg inspiriation i den del af kursusmaterialet, der diskuterer muligheden for at lade `baseline` indgå som en kvadratisk effekt.
+
+\newpage
+
+# Bliv bedre til R
+
+På Statistisk Dataanalyse 2 er det primære fokus rettet mod, at I lærer at lave statistiske modeller i R herunder at I kan aflæse og fortolke output. De fleste datasæt bliver altid serveret i et ensartet format, og det er sjældent en væsentlig del af forelæsninger og opgaver, at I selv kan lave datamanipulation og figurer. Det er oplagt, at hvis man selv vil arbejde professionelt med R efter kurset, så opstår der hurtigt et behov for at kunne lave helt basale datamanipulationer og grafik. Ved at grave lidt i R programmerne fra forelæsningerne, kan man lære en del i den retning.
+
+Hvis du har tid og lyst, kan du bruge de følgende afsnit, til at snuse til nogle smarte funktioner i R, der kan være nyttige, når/hvis du senere skal arbejde med dine egne data i R.
+
+## Moderne værktøjer til datamanipulation
+
+Der findes en samling af R pakker, der forsøger at gøre det lettere at udføre forskellige operationer på datasæt, som man ofte vil have behov for, hvis man arbejder med et konkret datasæt.
+
+Denne sampling af R pakker kan installeres ved at installere R pakken som hedder `tidyverse` (i praksis installeres herved en hel sampling af pakker). Dernæst kan du som altid loade pakken i dit R markdown dokument ved at skrive
+
+```{r message = F, warning = F}
+library(tidyverse)
+```
+
+Der findes en række nye og mere effektive funktioner til indlæsning af data, der alle har et navn af formen `read_`. Fx. findes en funktion `read_table2()`, der kan bruges til at indlæse data, og som fungerer stort set lige som `read.table()`
+.
+```{r}
+case3new <- read_table2("../data/caseuge3.txt")
+case3new
+```
+
+Funktionen `mutate()` kan anvendes på et datasæt (her på `case3new`) til at lave nye variable (og til at lave eksisterende variable om til faktorer)
+
+```{r}
+case3new <- mutate(case3new, person = factor(person), treat = factor(treat), 
+                   period_fac = factor(period), change = appetite - baseline)
+case3new
+```
+
+Funktionen `count()` kan bruges til at lave tabeller for udvalgte variable i et datasæt.
+
+```{r}
+count(case3new, treat)
+count(case3new, period)
+count(case3new, treat, period)
+```
+
+Man kan lave et nyt datasæt, men udvalgte observationer ved brug af funktionen `filter()`. Her udtrække f.x. data fra person nummer 4
+
+```{r}
+data_pers4 <- filter(case3new, person == 4)
+data_pers4
+```
+
+Funktionen `select()` bruges til at udvælge et deldatasæt med kun udvalgte søjler (dvs. variable). Her laves et datasæt, som indholder søjle 1 til 5 og et datasæt, der kun indeholder variablene `treat, appetite, change`.
+
+```{r}
+data_1_5 <- select(case3new, 1:5)
+data_1_5
+data_small <- select(case3new, treat, appetite, change)
+data_small
+```
+
+Nogle af de mere nyttige tricks består i at kunne kombinere forskellige kommandoer fra `tidyr udvalgte størrelser, men hvor udregningerne foretages separat for hvert niveau af faktoren `treat`.
+
+```{r}
+summarise(group_by(case3new, treat), mean_app = mean(appetite)
+          , sd_app = sd(appetite), mean_change = mean(change) )
+```
+
+## Pæne figurer i R
+
+Installer R pakken `ggplot2` på din computer og sørg for, at du har indlæst datasættet til casen og navngivet det `case3new` i R.
+
+Følgende R kode kan bruges til at lave forskellige scatterplot, hvor variablene `baseline` og `appetite` plottes mod hinanden. Prøv at køre de forskellige R kommandoer for at finde ud af, hvad de forskellige dele af koden gør.
+
+```{r eval = F}
+library(ggplot2)
+ggplot(data = case3new) + geom_point(aes(x = baseline, y = appetite))
+ggplot(data = case3new) + geom_point(aes(x = baseline, y = appetite)
+                                     , color = "blue", size = 3, shape = "x")
+ggplot(data = case3new) + geom_point(aes(x = baseline, y = appetite
+                                         , color = person, size = period))
+ggplot(data = case3new) + 
+  geom_point(aes(x = baseline, y = appetite, color = person, size = period)) +
+  labs(x = "Sult-fornemmelse ved baseline", y = "Sult-fornemmelse efter maaltid"
+       , title = "Data fra case 3", subtitle = "21/9-2017")
+```
+
