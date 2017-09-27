@@ -1,0 +1,183 @@
+---
+title: "StatData2 - Forelæsning d. 28/9-2017"
+output: 
+  flexdashboard::flex_dashboard:
+    source_code: embed
+    theme: sandstone
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Om data {data-navmenu="Vitamin E i kødstykker"}
+
+## {.tabset}
+
+### Indlæsning af data
+
+```{r}
+ex72<-read.table("../data/Ex72.txt",header=T)
+head(ex72, 10)
+```
+
+Lav *meat* og *lab* om til faktorer
+
+```{r}
+ex72$meat<-factor(ex72$meat)
+ex72$lab<-factor(ex72$lab)
+```
+
+### Undersøgelse af forsøgsdesign
+
+```{r}
+with(ex72, table(meat, lab))
+```
+
+Tabeller viser, at forsøget er et balanceret to-faktorforsøg med 2 gentagelser for hver kombination af faktorerne *meat* og *lab* som hver har 5 niveauer.
+
+### Ny responsvariabel
+
+Det viser sig, at det er hensigtsmæssigt at udføre analyserne med kvadratroden af  Vitamin E indholdet som respons. Derfor lavet en ny variabel *svita*, der benyttes ved de efterfølgende statistiske analyser.
+
+```{r}
+ex72$svita <- sqrt(ex72$vita)
+```
+
+
+### Visualisering af data (kode)
+
+```{r eval = F}
+library(ggplot2)
+ggplot(data = ex72) + geom_point(mapping = aes(x = meat, y = svita, color = lab)) +
+  labs(y = "Square root of Vitamin (mg)", x = "Meat", title = "Vitamin E content in meat")
+```
+
+### Visualisering af data
+
+```{r echo = F, warning = F, message = F}
+library(ggplot2)
+ggplot(data = ex72) + geom_point(mapping = aes(x = meat, y = svita, color = lab)) +
+  labs(y = "Square root of Vitamin (mg)", x = "Meat", title = "Vitamin E content in meat")
+```
+
+
+# Statistisk model med *lab* som tilfældig effekt {data-navmenu="Vitamin E i kødstykker"}
+
+## {.tabset}
+
+### Brug af lme()
+
+I det følgende undersøges ved et likelihood-ratio test, om der er signifikant forskel på Vitamin E indholdet for de 5 niveauer af faktoren *meat*.
+
+```{r cache = TRUE, warning = F, message = F}
+library(nlme)
+mod1 <- lme(svita ~ meat, random = ~1 | lab, method = "ML",ex72)
+mod2 <- lme(svita ~ 1, random = ~1 | lab, method = "ML",ex72)
+anova(mod2,mod1)
+```
+
+Likelihood-ratioteststørrelsen (=134.0411) oversættes til en approksimativ p-værdi (<.0001) ved at 'slå op i' en passende table over en chi-i-anden fordeling. Vi konkluderer, at der er signifikant forskel på Vitamin E indholdet i de 5 kødstykker (givet ved faktoren *meat*).
+
+### Brug af lmer()
+
+Modellerne og testet kan også fås frem ved at anvende *lmer()*-funktionen fra R-pakken *lme4*. Vær opmærksom på syntax-forskellene omkring
+
+- hvordan man angiver tilfældige effekter i *lme* vs *lmer*
+- hvordan man angiver om parametrene skal estimeres ved maksimum likelihood estimation eller ved REML-estimation i *lme* hhv *lmer*
+
+Bemærk desuden, at teststørrelsen og p-værdien er ens uanset om man benytter *lme* eller *lmer*.
+
+```{r warning = F, message = F}
+library(lme4)
+mod1alt <- lmer(svita ~ meat+(1|lab), REML = F, data = ex72)
+mod2alt <- lmer(svita ~ 1+(1|lab), REML = F, data = ex72)
+anova(mod2alt, mod1alt)
+```
+
+# Statistisk model med både *lab* og *lab x meat* som tilfældige effekter {data-navmenu="Vitamin E i kødstykker"}
+
+## {.tabset}
+
+I det følgende vises hvordan man ved brug af enten *lme* eller *lmer* kan lave en model med 
+
+- systematisk (=fixed) effekt af *meat*
+- tilfældige (=random) effekt af både *lab* og *lab x meat*
+
+Desuden produceres et likelihood ratio test for, om der er signifikante forskelle i Vitamin E indholdet for de 5 kødstykker givet ved faktoren *meat*.
+
+### Med lme()
+
+```{r warning = F, message = F}
+library(nlme)
+ex72$meatlab <- ex72$meat:ex72$lab
+model1 <- lme(svita ~ meat, random = ~1 | lab/meatlab, method = "ML",ex72)
+model2 <- lme(svita ~ 1, random = ~1 | lab/meatlab, method = "ML",ex72)
+anova(model2, model1)
+```
+
+Likelihood ratio teststørrelsen bliver 62.92 med en tilhørende p-værdi < 0.0001.
+
+### Med lmer()
+
+```{r}
+model1alt <- lmer(svita ~ meat+(1|lab)+(1|meatlab), REML = F, data = ex72)
+model2alt <- lmer(svita ~ 1+(1|lab)+(1|meatlab), REML = F, data = ex72)
+anova(model2alt, model1alt)
+```
+
+Likelihood ratio teststørrelsen bliver 62.92 med en tilhørende p-værdi < 0.0001.
+
+# Statistisk model med 3 tilfældige effekter {data-navmenu="Vitamin E i kødstykker"}
+
+
+
+Modellen med 3 tilfældige effekt af *lab*, *meat* og *lab x meat* estimeres lettest med *lmer* som vist nedenfor.
+
+Vigtigt: Når man afrapporterer estimaterne for (varians)parametrene i en model med tilfældige effekter, så vil resultaterne være (lidt) afhængige af, om man bruge *ML* estimation eller *REML* estimation. Vi anbefaler, at man bruger *REML* estimation, hvilket i R-koden nedenfor angiver ved at skrive *REML = T*.
+```{r}
+r0 <- lmer(svita ~ 1 + (1|meat) + (1|lab) + (1|meatlab), REML = T, data = ex72)
+r0
+```
+
+Den statistiske model kan opskrives som
+
+\[
+Y_i=\mu+ a({\tt meat}_i)+b({\tt lab}_i)+c({\tt lab \times meat}_i)+e_i,
+\]
+hvor
+
+- $a(1),\ldots,a(5)$ er uafhængige og $\sim
+N(0,\sigma^2_{meat})$
+- $b(1),\ldots,b(5)$ er uafhængige og $\sim
+N(0,\sigma^2_{lab})$
+- $c(1,1),\ldots,c(5,5)$ er uafhængige og $\sim
+N(0,\sigma^2_{lab \times meat})$
+- $e_1,\ldots,e_{50}$ er uafhængige og $\sim
+N(0,\sigma^2)$
+
+Varians-estimaterne svarende til de forskellige tilfældige effekt aflæses (let) under *Random effects* i udskriften ovenfor. F.eks ses, at estimatet for residualspredningen bliver $\hat{\sigma}=0.06774$
+
+# Om F-test i modeller med tilfældige effekter
+
+Der er det problem likelihood ratio teststørrelserne, at deres fordeling kun er *kendt* asymptotisk set (svarende til at vi har uendelig mange data), hvilket i praksis betyder, at den oversættelse der sker fra likelihoodratio teststørrelse til p-værdi ikke er helt præcis. Ved forelæsningen d. 26/9-2017 så vi, hvordan man kan bruge *simulate.lme* til at finde (ved simulation) en bedre approksimation af p-værdien.
+
+Som nævnt på slides 8-12 fra forelæsningen d. 28/9-2017 kan man for visse pæne forsøgsdesign udtrække F-teststørrelser i stedet for likelihood-ratio teststørrelser, når man ønsker at teste forskellige hypoteser. F-teststørrelserne vil indimellem (=for pæne forsøgsdesigns) kunne oversættes exact til p-værdier, hvorfor det kan være en fordel at vide, hvordan man faktisk udtrækker disse F-teststørrelser. 
+
+For at kunne anvende metode skal man have et godt overblik over forsøgsdesignet og støtte sig op ad et faktordiagram (se slide 8 fra 28/9-2017). Nedenfor vises, hvordan man kan udtrække F-teststørrelsen svarende til test for effekt af *meat* i modellen, hvor man inddrager tilfældige effekter af både *lab* og *lab x meat*.
+
+```{r message = F, warning = F}
+m1 <- lm(svita ~ meat:lab, data = ex72)
+m2 <- lm(svita ~ meat + lab, data = ex72)
+MS_labmeat <- (deviance(m2) - deviance(m1))/(m2$df - m1$df)
+MS_labmeat
+m3b <- lm(svita ~ lab, data = ex72)
+MS_meat <- (deviance(m3b) - deviance(m2))/(m3b$df - m2$df)
+MS_meat
+F_meat <- MS_meat / MS_labmeat
+F_meat
+p_meat <- 1 - pf(F_meat, 4, 16)
+p_meat
+```
+
+**Nyttig info:** Der findes en (forholdsvis ny) R-pakke kaldet *lmerTest* der kan bruges til at lave diverse F-test for modeller med tilfældige effekter. Det er meget sandsynligt, at man ved at ekperimentere lidt med denne pakke, kan få R til at konstruere de forskellige F-test på slides 8-12 noget lettere.

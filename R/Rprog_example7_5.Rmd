@@ -1,0 +1,179 @@
+---
+title: 'Example 7.5: Chocolate'
+author: "Anders Tolver"
+date: "2 Mar 2017"
+output: pdf_document
+---
+
+## Om strukturen af data
+
+Indlæs data
+
+```{r}
+ex75 <- read.table(file = "../data/ex75.txt", header = T)
+head(ex75)
+```
+
+Tabeller til undersøgelse af forsøgsdesign
+
+```{r}
+table(ex75$assessor)
+table(ex75$product)
+table(ex75$session)
+```
+
+Alle faktorer er balancerede:
+
+- **assessor (A)**: faktor på 9 niveauer (bedømmere / personer)
+- **session (S)**: faktor på 4 niveauer (sessioner / forsøgsdage)
+- **product (P)**: faktor på 5 niveauer (produkt / chokolade)
+
+```{r}
+ex75$A <- factor(ex75$assessor)
+ex75$P <- factor(ex75$product)
+ex75$S <- factor(ex75$session)
+table(ex75$assessor, ex75$product)
+table(ex75$assessor, ex75$session)
+table(ex75$product, ex75$session)
+```
+
+Det viser sig, at vi har at gøre med et fuldstændigt trefaktorforsøg med (kun!) 1  måling for hver kombination af de tre faktorer (NB: specielt kan vi *ikke* inddrage trefaktorvekselvirkningen A x P x S i modellerne!).
+
+## Visualisering af data
+
+```{r}
+library(ggplot2)
+ggplot(data = ex75) + geom_point(mapping = aes(x = P, y = score, color = A
+                                               , shape = S))
+ggplot(data = ex75) + geom_point(mapping = aes(x = A, y = score, color = P
+                                               , shape = S))
+ggplot(data = ex75) + geom_point(mapping = aes(x = S, y = score, color = A
+                                               , shape = P))
+
+```
+
+## Statistisk model
+
+Den primære interesse ligger i at sammen ligne de forskellige produkter givet ved faktoren **P**. Vi ønsker at udtale os om forskelle i *sweetness* af chokolade produkterne, og vi er i princippet uinteresserede i bedømmernes (givet ved faktoren **A**) personlige vurdering. Derfor er det ret oplagt, at vælge en statistisk model hvor **A** inddrages som tilfældig effekt. Tilsvarende er vi ikke specifikt interesseret i at udtale os om forskellige i *sweetness* mellem de forskellige sessioner/forsøgsdage (givet ved faktoren **S**). Derfor inddrages faktoren **S** som tilfældig effekt i modellerne. Vekselvirkninger med **S** eller **A** skal (hvis vi vælger at inddrage dem i modellen) indgå med tilfældig effekt.
+
+Den statistiske model indeholder derfor følgende led
+
+- systematisk / fixed effekt af **P**
+- tilfældige / random effekter af **A**, **S**
+- tilfældige / random effekter svarende til vekselvirkningerne **A x S**, **A x P**, **S x P**
+
+### modelkontrol
+
+Modelkontrol foretages ved at betragte residualerne fra en model, hvor alle led inddrages som systematiske effekter. Der er andre muligheder, men det er denne løsning vi primært anvender på SD2.
+
+```{r}
+modkontrol <- lm(score ~ A + P + S + A:S + A:P + S:P, data = ex75)
+plot(predict(modkontrol), rstandard(modkontrol), pch = "+", col = "blue")
+abline(h = c(-2, 0, 2), lty = 2, col = "red")
+```
+
+Når vi betragter residualplottet bliver det klart, at der er en såkaldt *edge*-effekt i begge sider af plottet: fordi responsen er mål på en begrænset skala (fra 0 til 15), så
+vi der være (plads til) mindre variation for de målinger, der ligger nær endepunkterne 0 eller 15. En mulighed er at vælge en transformation, der forsøger at "løse" dette problem.
+
+```{r}
+ex75$nyscore <- asin(sqrt(ex75$score/15))
+modnykontrol <- lm(nyscore ~ A + P + S + A:S + A:P + S:P, data = ex75)
+plot(predict(modnykontrol), rstandard(modnykontrol), pch = "+", col = "blue")
+abline(h = c(-2, 0, 2), lty = 2, col = "red")
+```
+
+Der lader til at være store varianshomogenitet, når vi betragter residualerne fra modellen, hvor vi benytter en transformeret version af responsen.
+
+```{r}
+qqnorm(rstandard(modnykontrol), pch = "+", col = "blue")
+abline(0, 1, col = "red")
+```
+
+Smukt residualplot!
+
+### Estimation af modellen
+
+Modellen indeholder 5 tilfældige effekter (ud over residualvariationen). De tilfældige effekter er ikke alle ordnede i forhold til hinanden (f.x. er **A x S** hverken grovere eller finere end **A x P**!). Derfor vælger vi at benytte *lmer()*-funktionen til at estimere modellen.
+
+```{r warning = F, message = F}
+library(lme4)
+ex75$AS <- ex75$A:ex75$S
+ex75$AP <- ex75$A:ex75$P
+ex75$PS <- ex75$P:ex75$S
+rmod0 <- lmer(nyscore ~ P + (1 | A) + (1 | S) + (1 | AS) + (1 |AP) + (1 | PS), data = ex75)
+rmod0
+```
+
+Når man betragter størrelsesordenen af estimaterne for de forskellige varianskomponenter, så virker det som om, at vi kan se bort fra leddene svarende til **P x S** og **S**. Dette testes formelt nedenfor.
+
+### Test af tilfældige effekter
+
+Ifølge "reglen" fra slides til forelæsning d. 2/3-2017 kan vi let få R til udregne relevante test for om vi kan se bort fra varianskomponenterne hørende til vekselvirkningerne. Dette skylder, at der i faktordiagrammet (slide 17) er en pil fra den identiske faktor [I] til vekselvirkningerne. Et klassisk F-test lavet som om vekselvirkningerne indgik med tilfældig effekt er nemlig "gyldigt" som værktøj til at vurdere størrelsen af pågældende varianskomponent.
+
+```{r}
+m0 <- lm(nyscore ~ A + P + S + A:S + A:P + S:P, data = ex75)
+m1a <- lm(nyscore ~ A + P + S + A:S + A:P, data = ex75)
+m1b <- lm(nyscore ~ A + P + S + A:S + S:P, data = ex75)
+m1c <- lm(nyscore ~ A + P + S + A:P + S:P, data = ex75)
+anova(m1a, m0)
+anova(m1b, m0)
+anova(m1c, m0)
+```
+
+Vi konkluderer at varianskomponenten hørende til 
+
+- **S x P** er uden betydning: F=0.841, p=0.609
+- **A x P** er signifikant større end nul: F=7.378, p<0.0001
+- **A x S** er signifikant større end nul: F=1.969, p=0.016
+
+Man kan diskutere, om det giver mening at udføre test for om varianskomponenterne hørende til **A** og **S** kan sættes til nul, når begge faktorer indgår i en varianskomponent for en vekselvirkning.
+
+For fuldstændigheden skyld vises hvordan man med "håndkraft" kan udføre F-test for om varianskomponenterne hørende til **P x S** og **S** kan sættes til nul. Det ene test kan let udtrækkes fra R (-jvf. resultaterne ovenfor for **P x S**) - det anden test skal ifølge slides til forelæsningen udføres mod *variationen inden for stratum defineret ved P x S*.
+
+Først (gentagelse af) test for **P X S**
+
+```{r}
+MS_PS <- (deviance(m1a)-deviance(m0))/(m1a$df - m0$df)
+MS_PS
+MS_I <- deviance(m0)/m0$df.residual
+MS_I
+F_PS <- MS_PS/MS_I
+F_PS
+p_value_PS <- 1 - pf(F_PS, df1 = (m1a$df - m0$df) , df2 = m0$df.residual)
+p_value_PS
+```
+
+Check, at resultatet stemmer over ens med, hvad vi så ovenfor. Lad os fortsætte som om effekten af **P X S** fjernes (dvs. opdater faktordiagrammet fra slide 17).
+
+
+Test for **S** udføres ved at sammenligne MS størrelsen hørende til **S**  med MS størrelsen hørende til ** A x S** (jvf. opdateret faktordiagram).
+
+```{r}
+m1a <- lm(nyscore ~ A + P + S + A:S + A:P, data = ex75)
+m2 <- lm(nyscore ~ A + P + S + A:P, data = ex75)
+MS_AS <- (deviance(m2)-deviance(m1a))/(m2$df - m1a$df)
+MS_AS
+m3 <- lm(nyscore ~ A + P + A:P, data = ex75)
+MS_S <- (deviance(m3)-deviance(m2))/(m3$df - m2$df)
+MS_S
+F_S <- MS_S/MS_AS
+F_S
+p_value_S <- 1 - pf(F_S, df1 = (m3$df - m2$df) , df2 = m2$df.residual)
+p_value_S
+```
+
+Vi konkluderer, at varianskomponenten hørende til **S** kan fjernes (sammenlign med resultat på slide 21).
+
+### Test af systematiske effekter
+
+Med udgangspunkt i ovenstående fortsættes analyse med henblik på at test for effekt af **P**. Bemærk, at vi (jvf. første del af analysen) ser bort fra de tilfældige effekter af **P x S** og **S**.
+
+```{r}
+rmod1 <- lmer(nyscore ~ P + (1 | A) + (1 | AS) + (1 |AP), data = ex75)
+rmod2 <- lmer(nyscore ~ 1 + (1 | A) + (1 | AS) + (1 |AP), data = ex75)
+anova(rmod2, rmod1)
+```
+
+- Hvad konkluderes på baggrund af likelihood ratio testet?
+
+- Prøv selv at konstruere et F-test for den tilsvarende hypotese (kursorisk pensum)
