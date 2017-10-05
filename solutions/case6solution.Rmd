@@ -1,0 +1,211 @@
+---
+title: "SD2 - løsning til case 6"
+author: "Anders Tolver"
+date: "5 Oct 2017"
+output: pdf_document
+---
+
+Dette dokument indeholder supplerende kommentarer til filen **casesol6.pdf** og vedrører løsningen af case 6 programsat torsdag i kursusuge 5.
+
+# 1. Indlæsning af data
+
+```{r}
+data <- read.table(file = "../data/case6.txt", header = T)
+head(data)
+data$rotte <- factor(data$rotte)
+data$ugefac <- factor(data$uge)
+```
+
+# 2.
+
+I stedet for at køre R-koden fra opgaveformuleringen kan følgende løsning vælges.
+
+```{r message = F, warning  = F}
+library(tidyverse)
+ggplot(data = data) + geom_line(aes(x = uge, y = vgt, group = rotte))
+```
+
+# 3.
+
+```{r}
+interaction.plot(data$uge, data$beh, data$vgt)
+```
+
+# 4.-5. Digglemodel
+
+```{r warning = F, message = F}
+library(nlme)
+model0 <- lme(vgt ~ beh * ugefac, random = ~ 1 | rotte, data = data
+, corr = corGaus(form = ~ uge | rotte, nugget = T), method = "ML")
+```
+
+# 6.
+
+Her er flere muligheder
+
+- test om vekselvirkningen mellem **beh** og **ugefac** kan fjernes
+- test om det er rimeligt lave **uge** indgå i modellen som en kovariat (svarende til at der er en lineær sammenhæng mellem **uge** og responsen  **vgt**).
+
+# 7. Sammenligning af kontrol- og thyroxinrotter
+
+Vi benytter en fremgangsmåde, hvor vi konstruerer en *ny* behandlingsfaktor med kun 2 niveauer, hvor rotter som har modtaget **kontrol**- og **thyroxin**-behandling kommer i samme grupper. Forskellige løsningsmetoder er angivet.
+
+Løsning som anført i *hint*
+
+```{r}
+data$nybeh <- rep(1, 135)
+data$nybeh[data$beh == "Thiouracil"] = 2
+data$nybeh <- factor(data$nybeh)
+table(data$beh, data$nybeh)
+```
+
+Løsning, der benytter samme ide som i *hint*, men hvor niveauerne kaldes TRUE og FALSE
+
+```{r}
+data$nybeh2 <- (data$beh == "Thiouracil")
+table(data$beh, data$nybeh2)
+```
+
+Løsning, hvor niveauerne af behandlingsfaktoren ændres manuelt
+
+```{r}
+data$nybeh3 <- factor(data$beh)
+levels(data$nybeh3)
+levels(data$nybeh3) <- c("KonThy", "Thiouracil", "KonThy")
+table(data$beh, data$nybeh3)
+```
+
+Test for om grupperne **Kontrol** og **Thyroxin** kan slås sammen
+
+```{r}
+modelny <- lme(vgt ~ nybeh3 * ugefac, random = ~ 1 | rotte, data = data
+, corr = corGaus(form = ~ uge | rotte, nugget = T), method = "ML")
+anova(modelny, model0)
+```
+
+# 8. Forskelle til hver af de enkelte uger
+
+Med lidt snilde kan man få R til en anvende en parametrisering af modellen **modelny** fra spørgsmål 7., så man direkte kan aflæse forskelle mellem grupperne til hver af de 5 uger. Bemærk i øvrigt, at modellen genfittes med **method == "REML"**.
+
+```{r}
+modelny_refit <- lme(vgt ~ ugefac + nybeh3 : ugefac - 1, random = ~ 1 | rotte, data = data
+, corr = corGaus(form = ~ uge | rotte, nugget = T), method = "REML")
+round(summary(modelny_refit)$tTable, digits = 4)
+```
+
+Heraf aflæses direkte, at **Thiouracil**-rotterne først ligger signifikant under rotter fra de øvrige to behandlingsgrupper fra uge 3 (-se på p-værdier for det relevante test).
+
+# 8.-9. Løsning ved brug af estimable()
+
+Neden for benyttes estimable til at besvare de spørgsmål der ønskes besvaret under punkt 8. og 9. Her benyttes ikke en *smart* parametrisering af modellerne.
+
+```{r}
+modelny_refit2 <- lme(vgt ~ nybeh3 * ugefac, random = ~ 1 | rotte, data = data
+, corr = corGaus(form = ~ uge | rotte, nugget = T), method = "REML")
+summary(modelny_refit2)
+```
+
+\newpage
+
+```{r}
+thi1 <- c(1, 1, 0, 0, 0, 0, 0, 0, 0, 0)
+thi2 <- c(1, 1, 1, 0, 0, 0, 1, 0, 0, 0)
+thi3 <- c(1, 1, 0, 1, 0, 0, 0, 1, 0, 0)
+thi4 <- c(1, 1, 0, 0, 1, 0, 0, 0, 1, 0)
+thi5 <- c(1, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+kon1 <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+kon2 <- c(1, 0, 1, 0, 0, 0, 0, 0, 0, 0)
+kon3 <- c(1, 0, 0, 1, 0, 0, 0, 0, 0, 0)
+kon4 <- c(1, 0, 0, 0, 1, 0, 0, 0, 0, 0)
+kon5 <- c(1, 0, 0, 0, 0, 1, 0, 0, 0, 0)
+diff1 <- kon1 - thi1
+diff2 <- kon2 - thi2
+diff3 <- kon3 - thi3
+diff4 <- kon4 - thi4
+diff5 <- kon5 - thi5
+kon_incr1_5 <- kon5 - kon1
+thi_incr1_5 <- thi5 - thi1
+diff_incr1_5 <- kon_incr1_5 - thi_incr1_5
+
+est <- rbind(kon1, kon2, kon3, kon4, kon5
+             , thi1, thi2, thi3, thi4, thi5
+             , diff1, diff2, diff3, diff4, diff5
+             , kon_incr1_5, thi_incr1_5, diff_incr1_5)
+library(gmodels)
+round(estimable(modelny_refit2, est, conf.int = 0.95), digits = 4)
+```
+
+Konklusioner vedrørende forskellen mellem vægten for kontrolrotter og Thiouracil-rotter
+
+- forskellen øges (stort set monotont) fra uge 1 til uge 5
+- forskellene er signifikante fra uge 3 (-se på P-værdierne eller bemærk at 95 % - konfidensintervaller for forskellene *ikke* indeholder nul!)
+
+Et par hovedkonklusioner omkring tilvæksten fra uge 1 til uge 5
+
+- tilvæksten i kontrolgruppen estimeres til 1.0816 [95%-KI: 1.0303-1.1328]
+- tilvæksten i Thiouracil-gruppen estimeres til 0.8195 [95%-KI: 0.7526-0.8863]
+- tilvæksten er således 0.2621 højere i kontrolgruppen end i Thiouracil-gruppen [95%-KI: 0.1778-0.3463]
+
+# 10.
+
+Estimaterne for variansparametrene ses ved at lave et summary af slutmodellen (`summary(modelny_refit2)`). Se yderligere information på slide 24-25 fra dagens forelæsning.
+
+# 11.
+
+Her vises to forskellige konstruktioner, som begge laver et datasæt indeholdende tilvæksten fra uge 1 til uge 5 som *summary measure*.
+
+```{r}
+data1 <- subset(data, uge == 1) ### udvælg målinger fra uge 1
+data5 <- subset(data, uge == 5) ### udvælg målinger fra uge 5
+data1$vgt5 <- data5$vgt ### tilføj måling fra uge 5 til det reducerede datasæt
+data1$incr15 <- data1$vgt5 - data1$vgt ### konstruer tilvæksten fra uge 1 til 5
+head(data1)
+```
+
+Alternativ løsning (som bruger værktøjer fra **tidyverse** R-pakken).
+
+```{r}
+head(data)
+data_ny <- select(data, rotte, uge, beh, nybeh3, vgt)
+data_ny <- spread(data_ny, key = uge, value = vgt)
+names(data_ny)[4:8] <- paste("vgt", 1:5, sep = "")
+data_ny <- mutate(data_ny, incr15 = vgt5 - vgt1)
+head(data_ny)
+```
+
+
+# 12.
+
+Vi laver en ensidet variansanalyse med henblik på at estimere tilvæksterne fra uge 1 til uge 5 og forskellen i tilvækster mellem kontrol-rotter og thiouracil-rotter.
+
+Først inddrages behandlingsfaktoren med 3 niveauer (**beh**)
+```{r}
+m1 <- lm(incr15 ~ beh, data = data1)
+summary(m1)
+```
+
+Vi konkluderer bl.a. at forskellen i tilvækster for **Thyroxin** og **Kontrol** er - 0.02164 og at denne forskel *ikke* er signifikant (P=0.697).
+
+En formelt test giver samme P-værdi
+```{r}
+m2 <- lm(incr15 ~ nybeh3, data = data1)
+anova(m2, m1)
+```
+
+Endelig udskrives estimaterne ...
+```{r}
+summary(m2)
+confint(m2)
+```
+Vi konkluderer at
+
+- tilvæksten fra uge 1 til uge 5 for kontrolgruppen estimeres til 1.0816 [95%-KI: 1.0268-1.1363]
+- tilvæksten fra uge 1 til uge 5 for Thiouracil-grupper er 0.2621 lavere [95%-KI: 0.1722-0.3520]
+
+Diskussion / sammenligning med resulaterne fra Diggle-modellen:
+
+Diggle-modellen inddrager alle målinger på en gang og fitter en samlet statistisk model. På baggrund af denne ene model er det muligt at udtrække estimater for mange interessant forskelle (mellem behandlinger til et givet tidspunkt eller mellem tilvækster fra uge 1 til uge 5). Resultater og konfidensintervaller er (næsten) identiske med resultaterne som fås ved at lave en analyse af et *summmary measure* (her: tilvæksten fra uge 1 til uge 5). Sådan bør det naturligvis også være!
+
+
+
+
