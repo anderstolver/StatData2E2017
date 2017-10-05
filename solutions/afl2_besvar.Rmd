@@ -1,0 +1,175 @@
+---
+title: 'StatData2: besvarelse af afleveringsopgave 2'
+author: "Anders Tolver"
+output: 
+  flexdashboard::flex_dashboard:
+    source_code: embed
+    theme: sandstone
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+```
+
+# 1.
+
+Indlæsning af data
+
+```{r}
+afl2 <- read.table("../data/afl2.txt", header = T)
+head(afl2)
+```
+
+Datasættet indeholder
+
+- responsvariablen **logco2**
+- behandlingsfaktoren **treat** med to niveauer:  `r levels(afl2$treat)`
+- variablen **dag** der angiver tidspunktet for analysen af prøven (kan indgå både som faktor og som kovariat)
+
+Det er tanken, at **dag** indgår som faktor i analysen ved besvarelsen af delopgave 1.-3.
+
+# 2.
+
+Der er to gentagelser for hver kombination af faktorerne **treat** og **day**
+
+```{r}
+table(afl2$treat, afl2$day)
+```
+
+Derfor er det muligt at lade analysen tage udgangspunkt i en model for 2-sidet variansanalyse med vekselvirkning.
+
+\[
+Y_i=\gamma(treat \times day_i) + e_i, \quad e_1, \ldots, e_{48} \sim N(0,\sigma^2).
+\]
+
+# 3.
+
+## {.tabset}
+
+### Modelreduktion
+
+Test for effekt af vekselvirkning (F = 1.2952, P = 0.3287)
+
+```{r}
+m0 <- lm(logco2 ~ factor(day) * treat, data = afl2)
+m1 <- lm(logco2 ~ factor(day) + treat, data = afl2)
+anova(m1, m0)
+```
+
+Test for hovedeffekter (forkastes!)
+
+```{r}
+m2a <- lm(logco2 ~ treat, data = afl2)
+m2b <- lm(logco2 ~ factor(day), data = afl2)
+anova(m2a, m1)
+anova(m2b, m1)
+```
+
+Konklusion: den additive model lader til at give en fornuftig beskrivelse af, hvordan CO2-indholdet afhænger af faktorerne **treat** og **day**.
+
+### Parameterestimater
+
+```{r}
+summary(m1)
+```
+
+Omkring den forventede værdi af (log) CO2 konkluderer vi, at:
+
+- den forventede værdi af log(CO2) på **day=2, treat=kontrol** estimeres til -1.076
+- den forventede værdi af log(CO2) vokser fra **day=2** med henholdsvis 0.683 (**day=4**), 1.075 (**day=6**), ..., 2.305 (**day=12**)
+- den forventede værdi af log(CO2) er 1.534 højere for **treat=raj** end for **treat=kontrol**
+
+Estimaterne kan omregnes til sædvanelig skala ved at transformere med den inverse funktion til logaritmen (dvs. tage eksponentialfunktionen).
+
+Eksempel:
+
+- (median)-værdien af CO2 er *en faktor* exp(1.534)=4.637 højere for **treat=raj** end for **treat=kontrol**
+
+### LSD-værdier
+
+Der findes en pæn formel til beregning af LSD-værdier for en additive model for 2-sidet ANOVA i et balanceret forsøg.
+
+Eksempel
+
+- residual standard error aflæses til: s = 0.1254
+- residual degrees of freedom aflæses til: df = 17
+- relevant fraktil i t-fordeling (kode `qt(0.975, 17)`): facit = `r qt(0.975, 17)`
+- der er 4 målinger for hver gruppe givet ved faktoren **treat**
+
+LSD-værdien beregnes til
+
+\[
+0.1254 * \sqrt{\tfrac{1}{4}+\tfrac{1}{4}} * 2.1098 = 0.1871
+\]
+
+
+# 4.
+
+Som i eksemplet fra kursusuge 3 med hydrolyse af fødevarer, så er det muligt at lave et formelt test af, om det er rimeligt at lave **day** indgå som en kovariat i modellen i stedet for som en faktor. Fortolkningsmæssigt svarer dette til at modellere sammenhængen mellem **day** og (logaritmen) til CO2 ved en lineær funktion.
+
+Da vi i opgave 3 har reduceret den 2-sidede ANOVA til en additiv model, så skal linearitetshypotesen testes under den forudsætning, at linjerne er parellelle (dvs. samme hældning for de to niveauer af **treat**).
+
+```{r}
+m3 <- lm(logco2 ~ treat + day, data = afl2)
+anova(m3, m1)
+```
+
+P-værdien udtrykker, at det kan ikke virker helt rimeligt, at benytte en lineær funktion til at beskrive sammenhængen mellem **day** og **logco2**.
+
+# 5.
+
+## {.tabset}
+
+### Kommentarer
+
+En relevant figur kan fz. laves med følgende kode
+
+```{r eval = F}
+library(ggplot2)
+ggplot(data = afl2) + geom_point(aes(x = day, y = logco2, col = treat)) +
+  labs(x = "Days", y = "log(CO2)")
+```
+
+Figuren antyder, at sammenhængen mellem **day** og **logco2** ikke er lineær, men at der ses en svag tendens til at punkterne ligger på en kurve der krummer lidt.
+
+### Figur
+
+```{r echo = F}
+library(ggplot2)
+ggplot(data = afl2) + geom_point(aes(x = day, y = logco2, col = treat)) +
+  labs(x = "Days", y = "log(CO2)")
+```
+
+# 6.
+
+Der lægges op til, at man inddrager et kvadratisk led til at beskrive sammenhængen mellem **day** og **logco2**.
+
+En formelt test i R godkendes og kan udføres med følgende kode (-se evt. slides fra torsdag i kursusuge 2)
+
+```{r}
+mkvad <- lm(logco2 ~ treat + day + I(day^2), data = afl2)
+anova(mkvad, m1)
+```
+
+Estimater fra modellen
+
+```{r}
+summary(mkvad)
+```
+
+Bemærk: modellen beskriver et 2. gradspolynomial hvor konstantleddet afhænger af, om vi betragter **treat=kontrol** eller **treat=raj**.
+
+# 7.
+
+Et estimat og et konidensinterval for den kumulerede mængde kuldioxid efter 10 dage for en jordprøve med tilsat rajgræs kan beregnes ved brug af *estimable()*-funktionen.
+
+Husk at transformere resultatet tilbage (modellen er jo fittet til log-transformerede data).
+
+```{r warning = F, message = F}
+library(gmodels)
+raj_10 <- c(1, 1, 10, 10^2)
+est <- rbind(raj.10 = raj_10) ### overflødigt men giver pænere output
+estimable(mkvad, est, conf.int = 0.95)
+exp(estimable(mkvad, est, conf.int = 0.95)[, c(1, 6, 7)])
+```
+
