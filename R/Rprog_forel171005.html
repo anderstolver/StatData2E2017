@@ -2615,7 +2615,7 @@ window.FlexDashboardComponents.push({
 
 <div id="dashboard-container">
 
-<div id="om-data" class="section level1">
+<div id="om-data" class="section level1" data-navmenu="Vækst af geder">
 <h1>Om data</h1>
 <div id="section" class="section level2 tabset">
 <h2></h2>
@@ -2714,7 +2714,7 @@ goatdata0 &lt;-<span class="st"> </span><span class="kw">filter</span>(goatdata,
 </div>
 </div>
 </div>
-<div id="summary-measure" class="section level1">
+<div id="summary-measure" class="section level1" data-navmenu="Vækst af geder">
 <h1>Summary measure</h1>
 <p>Reducer de longitudinale målinger til et mål per individ (dvs kurve), der opsummerer noget relevant om hele kurveforløbet i lyset af den praktiske problemstilling.</p>
 <p>Eksempler</p>
@@ -2750,7 +2750,7 @@ Model 2: incr ~ factor(feed) + w0
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 </div>
-<div id="random-intercept-model" class="section level1">
+<div id="random-intercept-model" class="section level1" data-navmenu="Vækst af geder">
 <h1>Random intercept model</h1>
 <p>For at tage højde for, at der er afhængighed mellem målinger taget på samme individ (her: ged), så kan man udover effekten af de systematiske variable (<strong>feed, day, w0</strong>) tilføje et (tilfældigt) niveau (=Intercept) for hver ged.</p>
 <p>Rent grafisk svarer det til, at man tillader en stokastisk individuel forskydning af kurverne, og modellen omtales ofte som <em>random intercept</em> modellen.</p>
@@ -2794,7 +2794,7 @@ Number of Observations: 112
 Number of Groups: 28 </code></pre>
 <p>Som beskrevet på slides fra dagens forelæsning, så er det muligt at reducere lidt i middelværdistrukturen. Prøv selv at gøre dette (-søg eventuelt inspiration i eksemplet med Hydrolyse af fødevareprøver fra kursusuge 3).</p>
 </div>
-<div id="digglemodellen" class="section level1">
+<div id="digglemodellen" class="section level1" data-navmenu="Vækst af geder">
 <h1>Digglemodellen</h1>
 <div id="section-1" class="section level2 tabset">
 <h2></h2>
@@ -3008,7 +3008,7 @@ modDiggle     2 21 140.7827 194.4141 -49.39134 1 vs 2 6.856638  0.0324</code></p
 </div>
 </div>
 </div>
-<div id="vrige-modeller-med-seriel-korrelation" class="section level1">
+<div id="vrige-modeller-med-seriel-korrelation" class="section level1" data-navmenu="Vækst af geder">
 <h1>Øvrige modeller med seriel korrelation</h1>
 <div id="section-2" class="section level2 tabset">
 <h2></h2>
@@ -3141,7 +3141,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 ```
 
-# Om data
+# Om data {data-navmenu=&quot;Vækst af geder&quot;}
 
 ## {.tabset}
 
@@ -3215,7 +3215,8 @@ ggplot(data = goatdata0) + geom_line(aes(x = day, y = incr, group = goat)) + lab
 ggplot(data = goatdata0) + geom_line(aes(x = day, y = incr, group = goat)) + labs(x = &quot;Days&quot;, y = &quot;Weight increase (kg)&quot;)
 ```
 
-# Summary measure
+# Summary measure {data-navmenu=&quot;Vækst af geder&quot;}
+
 
 Reducer de longitudinale målinger til et mål per individ (dvs kurve), der opsummerer noget relevant om hele kurveforløbet i lyset af den praktiske problemstilling.
 
@@ -3237,7 +3238,8 @@ m1 &lt;- lm(incr ~ 1 + w0 ,goatdata91)
 anova(m1, m0)
 ```
 
-# Random intercept model
+# Random intercept model {data-navmenu=&quot;Vækst af geder&quot;}
+
 
 For at tage højde for, at der er afhængighed mellem målinger taget på samme individ (her: ged), så kan man udover effekten af de systematiske variable (**feed, day, w0**) tilføje et (tilfældigt) niveau (=Intercept) for hver ged.
 
@@ -3254,7 +3256,8 @@ modRI
 
 Som beskrevet på slides fra dagens forelæsning, så er det muligt at reducere lidt i middelværdistrukturen. Prøv selv at gøre dette (-søg eventuelt inspiration i eksemplet med Hydrolyse af fødevareprøver fra kursusuge 3).
 
-# Digglemodellen
+# Digglemodellen {data-navmenu=&quot;Vækst af geder&quot;}
+
 
 ## {.tabset}
 
@@ -3397,7 +3400,8 @@ Begge værdier er taget fra modeller fittet med **method=&quot;REML&quot;**.
 
 Når man benytter anova()-funktionen til at sammenligne korrelationsstrukturer ved at se på AIC-værdierne fra testtabellen, så betyder det ikke noget, om begge modeller er fittet med REML eller ML estimation (når blot middelværdistrukturen / den systematiske del af modellen er ens).
 
-# Øvrige modeller med seriel korrelation
+# Øvrige modeller med seriel korrelation {data-navmenu=&quot;Vækst af geder&quot;}
+
 
 ## {.tabset}
 
