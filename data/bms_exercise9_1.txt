@@ -1,0 +1,17 @@
+    N     table    harvest   yield
+   0.5      1      Early     23.95
+   0.5      1      Late      26.18
+   0.5      2      Early     25.02
+   0.5      2      Late      22.71
+   1.0      1      Early     34.24
+   1.0      1      Late      31.59
+   1.0      2      Early     29.87
+   1.0      2      Late      32.70
+   2.0      1      Early     39.38
+   2.0      1      Late      32.74
+   2.0      2      Early     34.90
+   2.0      2      Late      31.41
+   3.0      1      Early     36.29
+   3.0      1      Late      43.44
+   3.0      2      Early     40.65
+   3.0      2      Late      29.77
